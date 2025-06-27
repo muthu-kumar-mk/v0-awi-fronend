@@ -31,7 +31,7 @@ export const inPast = (n: number) => {
   return d;
 };
 
-export const dateFrom = inPast(90);
+export const dateFrom = inPast(240);
 dateFrom.setHours(0, 0, 0, 0);
 
 export const dateCurrent = new Date();
