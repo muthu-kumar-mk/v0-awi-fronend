@@ -112,7 +112,6 @@ export function EnhancedTable<T>({
       }
 
       const timer = setTimeout(() => {
-        console.log("Long press activated for row:", rowIndex)
         setIsLongPressing(true)
         setIsSelectionMode(true)
         setSelectedRows(new Set([rowIndex]))

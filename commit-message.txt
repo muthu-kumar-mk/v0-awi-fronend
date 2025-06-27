@@ -1,10 +1,10 @@
-feat: Integrate Orders API response with pagination
+fix: Resolve orders API integration issues
 
-- Updated OrdersPageContent to use the API response data
-- Implemented infinite scrolling with pagination
-- Added loading states and improved error handling
+- Fixed the payload construction for the orders API
+- Properly mapped API response to the Order interface
+- Implemented correct tab to moveType conversion
+- Added state management for orders data
+- Fixed infinite scrolling implementation
+- Improved loading states and error handling
+- Enhanced date formatting for appointment dates
 - Optimized table rendering for large datasets
-- Added proper date formatting for appointment dates
-- Improved status badge styling based on order status
-- Enhanced filter state management with localStorage persistence
-- Fixed tab switching to properly update API filters

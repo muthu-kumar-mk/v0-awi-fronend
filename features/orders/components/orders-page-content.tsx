@@ -17,7 +17,16 @@ export const filterToPayload = (filter: any, tabId: string) => {
   });
   payload.orderListingFilterType = payload.fromDate && payload.orderListingFilterType;
   payload.orderListingFilterTypeOption = payload.fromDate && payload.orderListingFilterTypeOption;
-  payload.moveType = tabId === 'All' ? payload?.moveType : tabId;
+  
+  // Convert tab to moveType
+  if (tabId === 'inbound') {
+    payload.moveType = 'Inbound';
+  } else if (tabId === 'outbound') {
+    payload.moveType = 'Outbound';
+  } else {
+    payload.moveType = '';
+  }
+  
   return payload;
 };
 
@@ -114,34 +123,35 @@ export function OrdersPageContent() {
   })
   const [hasNextPage, setHasNextPage] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [orders, setOrders] = useState<Order[]>([])
 
+  // Initialize from localStorage if available
   const storedFilter = typeof window !== 'undefined' ? localStorage.getItem('orderListFilter') : null;
   const parsedFilter = storedFilter && JSON.parse(storedFilter);
   const storedCurrentTab: any = typeof window !== 'undefined' ? localStorage.getItem('orderCurrentTab') : null;
+  
   const [currentTab, setCurrentTab] = useState<string>(
     !isEmpty(storedCurrentTab) ? storedCurrentTab : 'all'
   );
+  
   const [filter, setFilter] = useState<any>(
     !isEmpty(parsedFilter)
-      ? { ...parsedFilter, sortColumn: '', sortDirection: '', searchKey: search }
-      : { ...defaultOrderFilter, searchKey: search }
+      ? { ...parsedFilter, sortColumn: '', sortDirection: '', searchKey: search || '' }
+      : { ...defaultOrderFilter, searchKey: search || '' }
   );
+  
   const [searchTrigger, setSearchTrigger] = useState(0);
   
   // Update filter when tab changes
   useEffect(() => {
     if (activeTab !== currentTab) {
       setCurrentTab(activeTab);
-      localStorage.setItem('orderCurrentTab', activeTab);
-      
-      // Map UI tab to API moveType
-      let moveType = '';
-      if (activeTab === 'inbound') moveType = 'Inbound';
-      else if (activeTab === 'outbound') moveType = 'Outbound';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('orderCurrentTab', activeTab);
+      }
       
       setFilter(prev => ({
         ...prev,
-        moveType,
         pageIndex: 1 // Reset to first page on tab change
       }));
       setSearchTrigger(prev => prev + 1);
@@ -179,28 +189,54 @@ export function OrdersPageContent() {
     }
   }, [dateRange]);
 
-  const ApplyFilter = useCallback(
-    () => filterToPayload(filter, currentTab),
-    [filter, currentTab, searchTrigger]
-  );
+  // Create the API payload
+  const apiPayload = useCallback(() => {
+    return filterToPayload(filter, currentTab);
+  }, [filter, currentTab]);
 
   const {
     data: ordersData,
     isFetching,
     refetch,
-  } = useGetOrderListQuery(ApplyFilter(), {
+  } = useGetOrderListQuery(apiPayload(), {
     refetchOnMountOrArgChange: true,
     skip: false,
   });
 
-  // Check if there are more pages to load
+  // Process API response and update orders state
   useEffect(() => {
-    if (ordersData?.response) {
+    if (ordersData?.response?.items) {
       const { items, totalCount } = ordersData.response;
-      const hasMore = items.length < totalCount;
+      
+      // Map API response to our Order interface
+      const mappedOrders = items.map((item: any) => ({
+        orderId: item.orderId,
+        transactionId: item.transactionId,
+        customer: item.customer,
+        orderType: item.orderType,
+        referenceId: item.referenceId,
+        channel: item.orderCreationTypeId || 'Manual',
+        appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
+        status: item.status,
+        moveType: item.moveType,
+        serviceType: item.serviceType,
+        location: item.location,
+        trackingNo: item.trackingNo,
+        createdOn: item.createdOn ? new Date(item.createdOn).toLocaleDateString() : '-'
+      }));
+      
+      // If it's the first page, replace orders; otherwise append
+      if (filter.pageIndex === 1) {
+        setOrders(mappedOrders);
+      } else {
+        setOrders(prev => [...prev, ...mappedOrders]);
+      }
+      
+      // Check if there are more pages to load
+      const hasMore = items.length > 0 && (filter.pageIndex * filter.pageSize) < totalCount;
       setHasNextPage(hasMore);
     }
-  }, [ordersData]);
+  }, [ordersData, filter.pageIndex, filter.pageSize]);
 
   // Function to load more data
   const fetchNextPage = async () => {
@@ -221,29 +257,6 @@ export function OrdersPageContent() {
       setIsLoadingMore(false);
     }
   };
-
-  // Map API response to our Order interface
-  const mapApiResponseToOrders = (data: any): Order[] => {
-    if (!data?.response?.items) return [];
-    
-    return data.response.items.map((item: any) => ({
-      orderId: item.orderId,
-      transactionId: item.transactionId,
-      customer: item.customer,
-      orderType: item.orderType,
-      referenceId: item.referenceId,
-      channel: item.orderCreationTypeId || 'Manual',
-      appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
-      status: item.status,
-      moveType: item.moveType,
-      serviceType: item.serviceType,
-      location: item.location,
-      trackingNo: item.trackingNo,
-      createdOn: item.createdOn ? new Date(item.createdOn).toLocaleDateString() : '-'
-    }));
-  };
-
-  const orders = mapApiResponseToOrders(ordersData);
 
   const columns: MainTableColumn<Order>[] = [
     {
