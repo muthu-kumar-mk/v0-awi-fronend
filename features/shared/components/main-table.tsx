@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { EnhancedTable, type EnhancedTableColumn } from "./enhanced-table"
 
 export interface MainTableColumn<T> {
   key: keyof T | string
@@ -11,6 +10,8 @@ export interface MainTableColumn<T> {
   className?: string
   headerClassName?: string
   sortable?: boolean
+  minWidth?: number
+  sticky?: "left" | "right"
 }
 
 interface MainTableProps<T> {
@@ -18,9 +19,50 @@ interface MainTableProps<T> {
   columns: MainTableColumn<T>[]
   className?: string
   onRowClick?: (row: T) => void
+  // Infinite scroll props
+  hasNextPage?: boolean
+  fetchNextPage?: () => void
+  isFetchingNextPage?: boolean
+  // Sticky columns configuration
+  stickyColumns?: {
+    left?: string[] // column keys
+    right?: string[] // column keys
+  }
+  // Footer data for totals
+  footerData?: Record<string, any>
+  // Loading state
+  isLoading?: boolean
+  // Empty state
+  emptyMessage?: string
+    redirectEnabled?: boolean // Control redirect on row click
+  // Bulk selection props
+  enableBulkSelection?: boolean // NEW: Control bulk selection feature
+  onBulkAction?: (action: string, selectedRows: T[]) => void
+  bulkActions?: Array<{
+    id: string
+    label: string
+    icon?: React.ReactNode
+    variant?: "default" | "destructive"
+  }>
 }
 
-export function MainTable<T>({ data, columns, className, onRowClick }: MainTableProps<T>) {
+export function MainTable<T>({
+  data = [],
+  columns,
+  className,
+  onRowClick,
+  hasNextPage,
+  fetchNextPage,
+  isFetchingNextPage,
+  stickyColumns,
+  footerData,
+  isLoading,
+  emptyMessage,
+  enableBulkSelection = false, // NEW: Default to false
+  onBulkAction,
+  bulkActions,
+}: MainTableProps<T>) {
+  console.log("Data :",data)
   const getValue = (row: T, key: keyof T | string): any => {
     if (typeof key === "string" && key.includes(".")) {
       return key.split(".").reduce((obj: any, k) => obj?.[k], row)
@@ -28,66 +70,40 @@ export function MainTable<T>({ data, columns, className, onRowClick }: MainTable
     return row[key as keyof T]
   }
 
-  const handleRowClick = (row: T) => {
-    if (onRowClick) {
-      onRowClick(row)
-    }
-  }
+  const safeData = Array.isArray(data) ? data : []
+  const safeColumns = Array.isArray(columns) ? columns : []
+
+  // Convert MainTableColumn to TanStack column format
+  const tanstackColumns: EnhancedTableColumn<T>[] = safeColumns.map((column, index) => ({
+    id: typeof column.key === "string" ? column.key : String(column.key),
+    accessorFn: (row) => getValue(row, column.key),
+    header: column.header,
+    cell: ({ getValue, row }) => {
+      const value = getValue()
+      return column.render ? column.render(value, row.original) : value
+    },
+    enableSorting: column.sortable ?? false,
+    minWidth: column.minWidth,
+    sticky: column.sticky,
+  }))
 
   return (
-    <div className={cn("flex-1 rounded-dashboard border border-dashboard-border bg-white overflow-hidden", className)}>
-      <div className="h-full overflow-auto">
-        <Table>
-          <TableHeader className="sticky top-0 bg-white z-10">
-            <TableRow className="h-12 border-b border-dashboard-border">
-              {columns.map((column, index) => (
-                <TableHead
-                  key={index}
-                  className={cn(
-                    "h-12 px-4 text-left align-middle font-medium text-gray-600 bg-white",
-                    column.headerClassName,
-                  )}
-                >
-                  <div className="flex items-center gap-1">
-                    {column.header}
-                    {column.sortable && (
-                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row, rowIndex) => (
-              <TableRow
-                key={rowIndex}
-                className={cn(
-                  "h-12 border-b border-dashboard-border hover:bg-gray-50/50 transition-colors",
-                  onRowClick ? "cursor-pointer" : "",
-                )}
-                onClick={() => handleRowClick(row)}
-              >
-                {columns.map((column, colIndex) => {
-                  const value = getValue(row, column.key)
-                  return (
-                    <TableCell key={colIndex} className={cn("h-12 px-4 align-middle", column.className)}>
-                      {column.render ? column.render(value, row) : value}
-                    </TableCell>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <EnhancedTable
+      data={safeData}
+      columns={tanstackColumns}
+      className={className}
+      redirectEnabled={true} // Enable redirect on row click
+      onRowClick={onRowClick}
+      hasNextPage={hasNextPage}
+      fetchNextPage={fetchNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      stickyColumns={stickyColumns}
+      footerData={footerData}
+      isLoading={isLoading}
+      emptyMessage={emptyMessage}
+      enableBulkSelection={enableBulkSelection} // NEW: Pass through the prop
+      onBulkAction={onBulkAction}
+      bulkActions={bulkActions}
+    />
   )
 }
