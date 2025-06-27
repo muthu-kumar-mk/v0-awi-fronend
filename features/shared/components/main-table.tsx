@@ -34,7 +34,7 @@ interface MainTableProps<T> {
   isLoading?: boolean
   // Empty state
   emptyMessage?: string
-    redirectEnabled?: boolean // Control redirect on row click
+  redirectEnabled?: boolean // Control redirect on row click
   // Bulk selection props
   enableBulkSelection?: boolean // NEW: Control bulk selection feature
   onBulkAction?: (action: string, selectedRows: T[]) => void
@@ -57,12 +57,12 @@ export function MainTable<T>({
   stickyColumns,
   footerData,
   isLoading,
-  emptyMessage,
-  enableBulkSelection = false, // NEW: Default to false
+  emptyMessage = "No data available",
+  redirectEnabled = true,
+  enableBulkSelection = false,
   onBulkAction,
   bulkActions,
 }: MainTableProps<T>) {
-  console.log("Data :",data)
   const getValue = (row: T, key: keyof T | string): any => {
     if (typeof key === "string" && key.includes(".")) {
       return key.split(".").reduce((obj: any, k) => obj?.[k], row)
@@ -92,7 +92,7 @@ export function MainTable<T>({
       data={safeData}
       columns={tanstackColumns}
       className={className}
-      redirectEnabled={true} // Enable redirect on row click
+      redirectEnabled={redirectEnabled}
       onRowClick={onRowClick}
       hasNextPage={hasNextPage}
       fetchNextPage={fetchNextPage}
@@ -101,7 +101,7 @@ export function MainTable<T>({
       footerData={footerData}
       isLoading={isLoading}
       emptyMessage={emptyMessage}
-      enableBulkSelection={enableBulkSelection} // NEW: Pass through the prop
+      enableBulkSelection={enableBulkSelection}
       onBulkAction={onBulkAction}
       bulkActions={bulkActions}
     />

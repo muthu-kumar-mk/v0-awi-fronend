@@ -1,16 +1,13 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { PageHeader } from "@/features/shared/components/page-header"
 import { OrdersFilter } from "./orders-filter"
-import { TanStackTable } from "@/features/shared/components/tanstack-table"
-import { ordersColumns, allOrdersData, inboundOrdersData, outboundOrdersData } from "../mocks/orders-data"
+import { MainTable, type MainTableColumn } from "@/features/shared/components/main-table"
 import { useGetOrderListQuery } from "@/lib/redux/api/orderManagement"
 import { isEmpty } from 'lodash';
-import { MainTable, type MainTableColumn } from "@/features/shared/components/main-table"
-
 
 export const filterToPayload = (filter: any, tabId: string) => {
   const payload = { ...filter };
@@ -23,7 +20,6 @@ export const filterToPayload = (filter: any, tabId: string) => {
   payload.moveType = tabId === 'All' ? payload?.moveType : tabId;
   return payload;
 };
-
 
 export const inPast = (n: number) => {
   const d = new Date();
@@ -39,7 +35,7 @@ dateCurrent.setHours(23, 59, 59, 999);
 
 export const defaultOrderFilter = {
   pageIndex: 1,
-  pageSize: 50,
+  pageSize: 20, // Reduced page size for better performance
   searchKey: '',
   sortColumn: '',
   sortDirection: '',
@@ -88,21 +84,26 @@ export const defaultOrderFilter = {
   tags: '',
 };
 
-
 export interface Order {
+  orderId: string
   transactionId: string
   customer: string
   orderType: string
   referenceId: string
-  channel: string
+  channel?: string
   appointmentDate: string
   status: string
+  moveType: string
+  serviceType: string
+  location: string
+  trackingNo?: string
+  createdOn: string
 }
 
 const breadcrumbItems = [{ label: "Home", href: "/dashboard" }, { label: "Order Management" }]
 
 export function OrdersPageContent() {
-  const { push  } = useRouter();
+  const { push } = useRouter();
   const { search }: any = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
@@ -111,12 +112,14 @@ export function OrdersPageContent() {
     from: new Date(2025, 0, 23), // January 23, 2025
     to: new Date(2025, 3, 22), // April 22, 2025
   })
+  const [hasNextPage, setHasNextPage] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
-  const storedFilter = localStorage.getItem('orderListFilter');
+  const storedFilter = typeof window !== 'undefined' ? localStorage.getItem('orderListFilter') : null;
   const parsedFilter = storedFilter && JSON.parse(storedFilter);
-  const storedCurrentTab: any = localStorage.getItem('orderCurrentTab');
+  const storedCurrentTab: any = typeof window !== 'undefined' ? localStorage.getItem('orderCurrentTab') : null;
   const [currentTab, setCurrentTab] = useState<string>(
-    !isEmpty(storedCurrentTab) ? storedCurrentTab : 'All'
+    !isEmpty(storedCurrentTab) ? storedCurrentTab : 'all'
   );
   const [filter, setFilter] = useState<any>(
     !isEmpty(parsedFilter)
@@ -124,13 +127,65 @@ export function OrdersPageContent() {
       : { ...defaultOrderFilter, searchKey: search }
   );
   const [searchTrigger, setSearchTrigger] = useState(0);
+  
+  // Update filter when tab changes
+  useEffect(() => {
+    if (activeTab !== currentTab) {
+      setCurrentTab(activeTab);
+      localStorage.setItem('orderCurrentTab', activeTab);
+      
+      // Map UI tab to API moveType
+      let moveType = '';
+      if (activeTab === 'inbound') moveType = 'Inbound';
+      else if (activeTab === 'outbound') moveType = 'Outbound';
+      
+      setFilter(prev => ({
+        ...prev,
+        moveType,
+        pageIndex: 1 // Reset to first page on tab change
+      }));
+      setSearchTrigger(prev => prev + 1);
+    }
+  }, [activeTab, currentTab]);
+
+  // Update filter when search changes
+  useEffect(() => {
+    if (searchQuery !== filter.searchKey) {
+      setFilter(prev => ({
+        ...prev,
+        searchKey: searchQuery,
+        pageIndex: 1 // Reset to first page on search
+      }));
+      setSearchTrigger(prev => prev + 1);
+    }
+  }, [searchQuery, filter.searchKey]);
+
+  // Update filter when date range changes
+  useEffect(() => {
+    if (dateRange.from && dateRange.to) {
+      const fromDate = new Date(dateRange.from);
+      fromDate.setHours(0, 0, 0, 0);
+      
+      const toDate = new Date(dateRange.to);
+      toDate.setHours(23, 59, 59, 999);
+      
+      setFilter(prev => ({
+        ...prev,
+        fromDate: fromDate.toISOString(),
+        toDate: toDate.toISOString(),
+        pageIndex: 1 // Reset to first page on date change
+      }));
+      setSearchTrigger(prev => prev + 1);
+    }
+  }, [dateRange]);
+
   const ApplyFilter = useCallback(
     () => filterToPayload(filter, currentTab),
-    [searchTrigger, currentTab]
+    [filter, currentTab, searchTrigger]
   );
 
   const {
-    data: getOrders,
+    data: ordersData,
     isFetching,
     refetch,
   } = useGetOrderListQuery(ApplyFilter(), {
@@ -138,19 +193,57 @@ export function OrdersPageContent() {
     skip: false,
   });
 
-  console.log("getOrders", getOrders);
-  console.log("isFetching", isFetching);
-  
-  const getTableData = (activeTab:string) => {
-    switch (activeTab) {
-      case "inbound":
-        return inboundOrdersData
-      case "outbound":
-        return outboundOrdersData
-      default:
-        return getOrders
+  // Check if there are more pages to load
+  useEffect(() => {
+    if (ordersData?.response) {
+      const { items, totalCount } = ordersData.response;
+      const hasMore = items.length < totalCount;
+      setHasNextPage(hasMore);
     }
-  }
+  }, [ordersData]);
+
+  // Function to load more data
+  const fetchNextPage = async () => {
+    if (isLoadingMore || !hasNextPage) return;
+    
+    setIsLoadingMore(true);
+    
+    try {
+      const nextPage = filter.pageIndex + 1;
+      setFilter(prev => ({
+        ...prev,
+        pageIndex: nextPage
+      }));
+      
+      // Trigger refetch with new page
+      await refetch();
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Map API response to our Order interface
+  const mapApiResponseToOrders = (data: any): Order[] => {
+    if (!data?.response?.items) return [];
+    
+    return data.response.items.map((item: any) => ({
+      orderId: item.orderId,
+      transactionId: item.transactionId,
+      customer: item.customer,
+      orderType: item.orderType,
+      referenceId: item.referenceId,
+      channel: item.orderCreationTypeId || 'Manual',
+      appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
+      status: item.status,
+      moveType: item.moveType,
+      serviceType: item.serviceType,
+      location: item.location,
+      trackingNo: item.trackingNo,
+      createdOn: item.createdOn ? new Date(item.createdOn).toLocaleDateString() : '-'
+    }));
+  };
+
+  const orders = mapApiResponseToOrders(ordersData);
 
   const columns: MainTableColumn<Order>[] = [
     {
@@ -173,7 +266,7 @@ export function OrdersPageContent() {
       render: (value: string) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            value === "B2B" || value === "B2C" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+            value.includes("B2B") || value.includes("B2C") ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
           }`}
         >
           {value}
@@ -239,6 +332,18 @@ export function OrdersPageContent() {
               return "bg-green-100 text-green-800 border-green-200"
             case "Closed":
               return "bg-gray-100 text-gray-800 border-gray-200"
+            case "Pending Carrier Details":
+              return "bg-amber-100 text-amber-800 border-amber-200"
+            case "Packing":
+              return "bg-cyan-100 text-cyan-800 border-cyan-200"
+            case "Picking":
+              return "bg-teal-100 text-teal-800 border-teal-200"
+            case "Ready to Ship":
+              return "bg-emerald-100 text-emerald-800 border-emerald-200"
+            case "Loading":
+              return "bg-lime-100 text-lime-800 border-lime-200"
+            case "Print Shipping Document":
+              return "bg-sky-100 text-sky-800 border-sky-200"
             default:
               return "bg-gray-100 text-gray-800 border-gray-200"
           }
@@ -256,6 +361,12 @@ export function OrdersPageContent() {
     push(`/order-details/${order.transactionId}`)
   }
 
+  // Save filter to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orderListFilter', JSON.stringify(filter));
+    }
+  }, [filter]);
 
   return (
     <div className="bg-dashboard-background min-h-screen flex flex-col">
@@ -285,11 +396,14 @@ export function OrdersPageContent() {
           {/* Table Section - 928px width, responsive, remaining viewport */}
           <div className="flex-1">
             <MainTable
-              data={getTableData(currentTab)}
+              data={orders}
               columns={columns}
               onRowClick={handleRowClick}
-              hasNextPage={false} // Add infinite scroll later if needed
-              emptyMessage="No orders found matching your criteria"
+              hasNextPage={hasNextPage}
+              fetchNextPage={fetchNextPage}
+              isFetchingNextPage={isLoadingMore}
+              isLoading={isFetching && filter.pageIndex === 1}
+              emptyMessage={isFetching ? "Loading orders..." : "No orders found matching your criteria"}
             />
           </div>
         </div>

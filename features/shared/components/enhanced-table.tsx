@@ -358,41 +358,27 @@ export function EnhancedTable<T>({
    */
   const handleRowClick = useCallback(
     (row: T, rowIndex: number, event: React.MouseEvent) => {
-      console.log("Row clicked:", row)
-      console.log("Row Click handler:", onRowClick)
-      console.log("redirectEnabled:", redirectEnabled)
-      console.log("enableBulkSelection:", enableBulkSelection)
-      console.log("isSelectionMode:", isSelectionMode)
-      console.log("isLongPressing:", isLongPressing)
-      console.log("pressStartTime:", pressStartTime, "current time:", Date.now())
-
       // Case 1: If we're in the middle of a long press, prevent any click action
       if (isLongPressing) {
         event.preventDefault()
         event.stopPropagation()
-        console.log("Preventing click due to active long press")
         return
       }
 
       // Case 2: If we're in selection mode, toggle the row selection
       if (isSelectionMode) {
-        console.log("In selection mode, toggling row selection")
         toggleRowSelection(rowIndex)
         return
       }
 
       // Case 3: If bulk selection is enabled and this was a potential long press that didn't complete
       if (enableBulkSelection && pressStartTime > 0 && Date.now() - pressStartTime < 900) {
-        console.log("Preventing click due to recent press start")
         return
       }
 
       // Case 4: Regular click - redirect only if redirectEnabled is true
       if (redirectEnabled && onRowClick) {
-        console.log("Executing row click navigation")
         onRowClick(row)
-      } else {
-        console.log("Not redirecting: redirectEnabled =", redirectEnabled, "onRowClick =", !!onRowClick)
       }
     },
     [
@@ -402,7 +388,7 @@ export function EnhancedTable<T>({
       toggleRowSelection,
       pressStartTime,
       onRowClick,
-      redirectEnabled, // Add redirectEnabled to dependencies
+      redirectEnabled,
     ],
   )
 
@@ -563,7 +549,7 @@ export function EnhancedTable<T>({
         </table>
 
         {/* Loading indicator - shows at bottom when loading */}
-        {hasNextPage && isFetchingNextPage && (
+        {isFetchingNextPage && (
           <div className="h-16 flex items-center justify-center bg-white border-t border-dashboard-border">
             <div className="text-sm text-gray-500 flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
