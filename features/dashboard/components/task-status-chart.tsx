@@ -179,20 +179,20 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 0, right: 0, left: 120, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             barSize={8}
             barGap={0}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-            <XAxis type="number" className="bg-blue-900" hide />
+            <XAxis type="number" hide />
             <YAxis 
               dataKey="name" 
               type="category" 
               tick={{ fontSize: 12 }}
-              width={25}
+              width={120}
               axisLine={false}
-              style={{paddingLeft: '15px'}}
-              dx={-25}
+              tickLine={false}
+              tickMargin={20}
             />
             <Tooltip content={<CustomTooltip />} />
             
