@@ -205,12 +205,12 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <Tooltip content={<CustomTooltip />} />
             
             {/* Stacked bars for each status */}
-            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={0} />
+            <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} radius={0} />
+            <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={0} />
+            <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={0} />
+            <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={0} />
+            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={0} />
           </BarChart>
         </ResponsiveContainer>
         

@@ -36,7 +36,18 @@ export function ChartPlaceholder({ title, description, className }: ChartPlaceho
 
   return (
     <Card className={className}>
-      <CardContent className="p-4 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex justify-between">
+          {title}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="outbound">Outbound</TabsTrigger>
+              <TabsTrigger value="inbound">Inbound</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 h-[calc(100%-60px)]">
         {renderChart()}
       </CardContent>
     </Card>
