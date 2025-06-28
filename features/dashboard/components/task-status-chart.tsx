@@ -179,7 +179,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: 120, bottom: 0 }}
             barSize={8}
             barGap={2}
           >
@@ -192,6 +192,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               width={120}
               axisLine={false}
               style={{paddingLeft: '15px'}}
+              dx={-120}
             />
             <Tooltip content={<CustomTooltip />} />
             
