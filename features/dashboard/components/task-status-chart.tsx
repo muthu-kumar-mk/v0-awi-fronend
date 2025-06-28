@@ -60,7 +60,7 @@ const inboundData: TaskData[] = [
     "Completed": 7 
   },
   { 
-    name: "Receiving and Put away", 
+    name: "Receiving and\nPut away", 
     "Waiting": 9, 
     "Yet to Start": 10, 
     "Hold": 6, 
@@ -69,7 +69,7 @@ const inboundData: TaskData[] = [
     "Completed": 11 
   },
   { 
-    name: "Review Overage / Underage", 
+    name: "Review Overage\n/ Underage", 
     "Waiting": 11, 
     "Yet to Start": 12, 
     "Hold": 8, 
@@ -109,7 +109,7 @@ const outboundData: TaskData[] = [
     "Completed": 6 
   },
   { 
-    name: "Receiving and Put away", 
+    name: "Receiving and\nPut away", 
     "Waiting": 8, 
     "Yet to Start": 9, 
     "Hold": 5, 
@@ -118,7 +118,7 @@ const outboundData: TaskData[] = [
     "Completed": 9 
   },
   { 
-    name: "Review Overage / Underage", 
+    name: "Review Overage\n/ Underage", 
     "Waiting": 10, 
     "Yet to Start": 11, 
     "Hold": 7, 
@@ -137,7 +137,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-2 border border-gray-200 rounded-md shadow-sm">
-          <p className="font-medium mb-1">{label}</p>
+          <p className="font-medium mb-1">{label.replace('\n', ' ')}</p>
           {payload.map((entry: any, index: number) => (
             <div key={`tooltip-${index}`} className="flex items-center gap-2">
               <div 
@@ -179,7 +179,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: 120, bottom: 0 }}
             barSize={8}
             barGap={0}
           >
@@ -193,6 +193,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               axisLine={false}
               tickLine={false}
               tickMargin={20}
+              tickFormatter={(value) => value.replace('\n', ' ')}
             />
             <Tooltip content={<CustomTooltip />} />
             
