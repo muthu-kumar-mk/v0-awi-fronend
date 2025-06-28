@@ -32,9 +32,9 @@ export default function Login() {
   const [isResetPassword, setIsResetPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
- 
   
   const [login, { isLoading }] = useLoginMutation()
+  
   // Setup react-hook-form with zod resolver
   const { 
     register, 
@@ -277,4 +277,3 @@ export default function Login() {
     </div>
   )
 }
-```
