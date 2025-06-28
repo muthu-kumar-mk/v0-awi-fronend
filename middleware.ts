@@ -9,18 +9,21 @@ export function middleware(request: NextRequest) {
   // Define public paths that don't require authentication
   const isPublicPath = path === '/login'
   
-  // Get the token from cookies or localStorage (in this case from cookies)
-  const token = request.cookies.get('userCred')?.value
+  // Check for authentication by looking for the token in cookies
+  // Note: We're checking for the existence of the 'userCred' item in localStorage
+  // but since middleware runs on the server, we need to use cookies
+  const authCookie = request.cookies.get('userCred')?.value
+  const isAuthenticated = !!authCookie
   
   // Check if user is trying to access a protected route without being logged in
-  if (!isPublicPath && !token) {
+  if (!isPublicPath && !isAuthenticated) {
     // Redirect to login page
     return NextResponse.redirect(new URL('/login', request.url))
   }
   
   // Check if user is trying to access login page while already logged in
-  if (isPublicPath && token) {
-    // Redirect to dashboard or home page
+  if (isPublicPath && isAuthenticated) {
+    // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
   

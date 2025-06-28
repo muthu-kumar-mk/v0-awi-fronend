@@ -2,27 +2,49 @@ import { AWI_USERS } from '@/constants/common';
 import { EMAIL_REGEX } from '@/constants/regex';
 import { isNull, isString, isUndefined, isEmpty } from 'lodash';
 
-export const loginCredentials = (key: string, value: any) =>
-  localStorage.setItem(key, JSON.stringify(value));
+export const loginCredentials = (key: string, value: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, JSON.stringify(value));
+    
+    // Also set a cookie for middleware authentication
+    if (key === 'userCred' && value?.token) {
+      document.cookie = `userCred=${JSON.stringify(value)}; path=/; max-age=86400`;
+    }
+  }
+};
 
 export const getUserCred = (key: string) => {
   if (typeof window !== 'undefined') {
-    const storedUserCredStr: any = window.localStorage.getItem(key);
-    if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      return JSON.parse(storedUserCredStr);
+    try {
+      const storedUserCredStr: any = window.localStorage.getItem(key);
+      if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
+        return JSON.parse(storedUserCredStr);
+      }
+    } catch (error) {
+      console.error('Error getting user credentials:', error);
+      return null;
     }
   }
-  return resetUserCred();
+  return null;
 };
 
 export const resetUserCred = () => {
   if (typeof window !== 'undefined') {
-    window.localStorage.clear();
-    window.localStorage.removeItem('userCred');
-    window.localStorage.removeItem('orderListFilter');
-    window.localStorage.removeItem('orderCurrentTab');
+    try {
+      window.localStorage.clear();
+      window.localStorage.removeItem('userCred');
+      window.localStorage.removeItem('orderListFilter');
+      window.localStorage.removeItem('orderCurrentTab');
+      
+      // Also clear the cookie
+      document.cookie = 'userCred=; path=/; max-age=0';
+    } catch (error) {
+      console.error('Error resetting user credentials:', error);
+    }
   }
+  return null;
 };
+
 export const checkIfValidEmail = (value: string) => new RegExp(EMAIL_REGEX).test(value);
 export const checkIfAccess = (accessKey: String) =>
   getUserCred('userCred')?.roleClaims?.includes(accessKey);

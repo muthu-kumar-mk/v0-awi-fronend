@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, QrCode } from "lucide-react"
 import { useLoginMutation } from "@/lib/redux/api/auth"
 import { encryptedMessage } from "@/utils/rsa"
-import { isAuthenticated, redirectToDashboard } from "@/utils/auth"
+import { isAuthenticated } from "@/utils/auth"
 
 // Define our form schemas using zod
 const loginSchema = z.object({
@@ -31,6 +31,7 @@ export default function Login() {
   const router = useRouter()
   const [isResetPassword, setIsResetPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
  
   
   const [login, { isLoading }] = useLoginMutation()
@@ -61,9 +62,10 @@ export default function Login() {
   // Check if user is already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      redirectToDashboard()
+      router.push("/dashboard")
     }
-  }, [])
+    setIsCheckingAuth(false)
+  }, [router])
 
   const onSubmit = async (data: LoginFormValues) => {
     setErrorMessage(null)
@@ -90,6 +92,11 @@ export default function Login() {
   const onResetPassword = async (data: ResetPasswordFormValues) => {
     console.log("Reset password for:", data.email)
     alert(`Password reset link sent to ${data.email}`)
+  }
+
+  // Don't render anything while checking authentication
+  if (isCheckingAuth) {
+    return null
   }
 
   return (
@@ -270,3 +277,4 @@ export default function Login() {
     </div>
   )
 }
+```

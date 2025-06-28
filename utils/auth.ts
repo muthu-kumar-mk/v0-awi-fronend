@@ -6,11 +6,16 @@ export const isAuthenticated = (): boolean => {
     return false
   }
   
-  // Get user credentials from localStorage
-  const userCred = getUserCred('userCred')
-  
-  // Return true if token exists, false otherwise
-  return !!userCred?.token
+  try {
+    // Get user credentials from localStorage
+    const userCred = getUserCred('userCred')
+    
+    // Return true if token exists, false otherwise
+    return !!userCred?.token
+  } catch (error) {
+    console.error('Error checking authentication:', error)
+    return false
+  }
 }
 
 export const redirectToLogin = () => {
