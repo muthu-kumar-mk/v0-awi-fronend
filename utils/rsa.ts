@@ -1,11 +1,9 @@
 import * as forge from 'node-forge';
 
 const publicKey = process.env.ENCRYPT_PUBLIC_KEY;
-// console.log(publicKey)
 
 // Encrypts a message with the given public key
 export const encryptedMessage = (message: string) => {
-  // console.log(publicKey)
   if (!publicKey) {
     console.error('Public key is not defined');
     return message; // Return original message if no key is available
