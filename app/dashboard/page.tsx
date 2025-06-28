@@ -71,7 +71,7 @@ export default function DashboardPage() {
             <ChartPlaceholder
               title="Task Status"
               description="Horizontal bar chart showing task progress"
-              className="w-chart-container flex-1 flex flex-col"
+              className="w-chart-container flex-1 "
             />
             <ChartPlaceholder
               title="Task Status Summary"
