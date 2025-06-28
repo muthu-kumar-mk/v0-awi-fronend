@@ -47,7 +47,7 @@ export function ChartPlaceholder({ title, description, className }: ChartPlaceho
           </Tabs>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 h-[calc(100%-60px)]">
+      <CardContent className="p-4">
         {renderChart()}
       </CardContent>
     </Card>
