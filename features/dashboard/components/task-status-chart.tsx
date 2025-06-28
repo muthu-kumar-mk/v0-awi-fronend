@@ -176,7 +176,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
     <div className="h-full flex flex-col">
       
       <div className="flex-1 w-full">
-        <ResponsiveContainer width="100%" height="50%">
+        <ResponsiveContainer width="100%" height="70%">
           <BarChart
             data={data}
             layout="vertical"
