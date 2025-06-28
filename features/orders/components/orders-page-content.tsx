@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { PageHeader } from "@/features/shared/components/page-header"
 import { OrdersFilter } from "./orders-filter"
@@ -113,7 +113,6 @@ const breadcrumbItems = [{ label: "Home", href: "/dashboard" }, { label: "Order 
 
 export function OrdersPageContent() {
   const { push } = useRouter();
-  const { search }: any = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -136,8 +135,8 @@ export function OrdersPageContent() {
   
   const [filter, setFilter] = useState<any>(
     !isEmpty(parsedFilter)
-      ? { ...parsedFilter, sortColumn: '', sortDirection: '', searchKey: search || '' }
-      : { ...defaultOrderFilter, searchKey: search || '' }
+      ? { ...parsedFilter, sortColumn: '', sortDirection: '', searchKey: '' }
+      : { ...defaultOrderFilter, searchKey: '' }
   );
   
   const [searchTrigger, setSearchTrigger] = useState(0);
@@ -205,10 +204,9 @@ export function OrdersPageContent() {
 
   // Process API response and update orders state
   useEffect(() => {
-    console.log("Entering mapping data", ordersData)
     if (ordersData?.items) {
       const { items, totalCount } = ordersData;
-      console.log("starting mapping")
+      
       // Map API response to our Order interface
       const mappedOrders = items.map((item: any) => ({
         transactionId: item.transactionId,
@@ -222,10 +220,8 @@ export function OrdersPageContent() {
       
       // If it's the first page, replace orders; otherwise append
       if (filter.pageIndex === 1) {
-        console.log(mappedOrders)
         setOrders(mappedOrders);
       } else {
-        console.log(mappedOrders)
         setOrders(prev => [...prev, ...mappedOrders]);
       }
       
