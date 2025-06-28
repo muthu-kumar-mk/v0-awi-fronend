@@ -1,4 +1,4 @@
-const forge = require('node-forge');
+import * as forge from 'node-forge';
 
 const publicKey = process.env.ENCRYPT_PUBLIC_KEY;
 // console.log(publicKey)
