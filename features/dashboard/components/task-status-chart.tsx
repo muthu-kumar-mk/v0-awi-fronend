@@ -189,7 +189,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               dataKey="name" 
               type="category" 
               tick={{ fontSize: 12 }}
-              width={10}
+              width={40}
               axisLine={false}
               style={{paddingLeft: '15px'}}
               dx={20}
