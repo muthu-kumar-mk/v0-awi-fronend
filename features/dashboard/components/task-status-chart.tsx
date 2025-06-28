@@ -174,13 +174,12 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
 
   return (
     <div className="h-full flex flex-col">
-      
       <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="70%">
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             barSize={8}
             barGap={2}
           >
@@ -196,12 +195,12 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <Tooltip content={<CustomTooltip />} />
             
             {/* Stacked bars for each status */}
-            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={8} />
+            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={0} />
             <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} radius={0} />
             <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={0} />
             <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={0} />
             <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={0} />
-            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={8} />
+            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={0} />
           </BarChart>
         </ResponsiveContainer>
         
