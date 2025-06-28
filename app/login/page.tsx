@@ -12,6 +12,7 @@ import { ChevronLeft, QrCode } from "lucide-react"
 import { useLoginMutation } from "@/lib/redux/api/auth"
 import { encryptedMessage } from "@/utils/rsa"
 import { isAuthenticated } from "@/utils/auth"
+import { loginCredentials } from "@/utils/helper"
 
 // Define our form schemas using zod
 const loginSchema = z.object({
@@ -76,10 +77,21 @@ export default function Login() {
         password: encryptedMessage(data.password),
       }
       console.log("Login body:", body)
-      const response = await login(body)
+      const response = await login(body).unwrap()
       
-      if ('data' in response && response.data?.statusCode === 200) {
-        router.push("/dashboard")
+      if (response?.statusCode === 200) {
+        // Ensure credentials are properly saved before redirecting
+        if (response?.response) {
+          loginCredentials('userCred', response.response)
+          loginCredentials('warehouseIds', response.response)
+          
+          // Use a small timeout to ensure localStorage is updated before redirect
+          setTimeout(() => {
+            router.push("/dashboard")
+          }, 100)
+        } else {
+          setErrorMessage("Login successful but user data is missing")
+        }
       } else {
         setErrorMessage("Invalid credentials. Please try again.")
       }

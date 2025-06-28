@@ -20,9 +20,11 @@ export const authApi = tagInjection.injectEndpoints({
       },
       invalidatesTags: ['UserProfile'],
       transformResponse: (res: any) => {
-        console.log(res)
-        loginCredentials('userCred', res?.response);
-        loginCredentials('warehouseIds', res?.response);
+        console.log("Login response:", res)
+        if (res?.statusCode === 200 && res?.response) {
+          loginCredentials('userCred', res?.response);
+          loginCredentials('warehouseIds', res?.response);
+        }
         return res;
       },
     }),
