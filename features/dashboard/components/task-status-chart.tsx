@@ -174,15 +174,6 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-medium">Task Status</h3>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="outbound">Outbound</TabsTrigger>
-            <TabsTrigger value="inbound">Inbound</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
       
       <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="80%">
