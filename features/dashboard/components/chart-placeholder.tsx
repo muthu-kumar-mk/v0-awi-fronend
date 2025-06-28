@@ -36,21 +36,7 @@ export function ChartPlaceholder({ title, description, className }: ChartPlaceho
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex justify-between">
-          {title}
-          {/* Only show tabs in the placeholder, not in the actual charts */}
-          {!title.includes("Task Status") && (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="outbound">Outbound</TabsTrigger>
-                <TabsTrigger value="inbound">Inbound</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 h-[calc(100%-60px)]">
+      <CardContent className="p-4 h-full">
         {renderChart()}
       </CardContent>
     </Card>
