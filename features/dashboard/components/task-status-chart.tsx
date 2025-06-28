@@ -188,7 +188,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <YAxis 
               dataKey="name" 
               type="category" 
-              tick={{ fontSize: 9 }}
+              tick={{ fontSize: 12 }}
               width={25}
               axisLine={false}
               style={{paddingLeft: '15px'}}
