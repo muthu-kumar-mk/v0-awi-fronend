@@ -82,6 +82,7 @@ export function EnhancedTable<T>({
   onBulkAction,
   bulkActions = [{ id: "", label: "Edit", icon: <Edit className="h-4 w-4" /> }],
 }: EnhancedTableProps<T>) {
+  console.log("EnhancedTable :",data)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})

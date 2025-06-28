@@ -205,12 +205,12 @@ export function OrdersPageContent() {
 
   // Process API response and update orders state
   useEffect(() => {
-    if (ordersData?.response?.items) {
-      const { items, totalCount } = ordersData.response;
-      
+    console.log("Entering mapping data", ordersData)
+    if (ordersData?.items) {
+      const { items, totalCount } = ordersData;
+      console.log("starting mapping")
       // Map API response to our Order interface
       const mappedOrders = items.map((item: any) => ({
-        orderId: item.orderId,
         transactionId: item.transactionId,
         customer: item.customer,
         orderType: item.orderType,
@@ -218,17 +218,14 @@ export function OrdersPageContent() {
         channel: item.orderCreationTypeId || 'Manual',
         appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
         status: item.status,
-        moveType: item.moveType,
-        serviceType: item.serviceType,
-        location: item.location,
-        trackingNo: item.trackingNo,
-        createdOn: item.createdOn ? new Date(item.createdOn).toLocaleDateString() : '-'
       }));
       
       // If it's the first page, replace orders; otherwise append
       if (filter.pageIndex === 1) {
+        console.log(mappedOrders)
         setOrders(mappedOrders);
       } else {
+        console.log(mappedOrders)
         setOrders(prev => [...prev, ...mappedOrders]);
       }
       
