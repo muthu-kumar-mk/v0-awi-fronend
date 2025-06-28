@@ -181,7 +181,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             layout="vertical"
             margin={{ top: 0, right: 0, left: 120, bottom: 0 }}
             barSize={8}
-            barGap={20}
+            barGap={-20}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
             <XAxis type="number" className="bg-blue-900" hide />
