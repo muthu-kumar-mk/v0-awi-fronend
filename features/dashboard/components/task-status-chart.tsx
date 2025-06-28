@@ -191,7 +191,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               tick={{ fontSize: 12 }}
               width={120}
               axisLine={false}
-              style={{paddingLeft : 15px}}
+              style={{paddingLeft: '15px'}}
             />
             <Tooltip content={<CustomTooltip />} />
             
