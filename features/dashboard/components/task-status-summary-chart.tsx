@@ -71,18 +71,6 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
   }
 
   return (
-    <Card className={cn("h-full", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle>Task Status Summary</CardTitle>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="outbound">Outbound</TabsTrigger>
-              <TabsTrigger value="inbound">Inbound</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </CardHeader>
       <CardContent className="flex flex-col h-[calc(100%-60px)]">
         <div className="flex-1 flex">
           <div className="w-1/2 relative">
@@ -128,6 +116,5 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
           </div>
         </div>
       </CardContent>
-    </Card>
   )
 }
