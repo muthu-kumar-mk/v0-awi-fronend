@@ -67,7 +67,7 @@ export default function DashboardPage() {
           <OrderStatusSection />
 
           {/* Chart Containers */}
-          <div className="h-chart-container flex gap-chart-gap">
+          <div className="flex gap-chart-gap">
             <ChartPlaceholder
               title="Task Status"
               description="Horizontal bar chart showing task progress"
