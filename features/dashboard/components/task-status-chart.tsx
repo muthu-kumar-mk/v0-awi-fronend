@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts"
 import { cn } from "@/lib/utils"
@@ -159,7 +158,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
     const statuses = ["Waiting", "Yet to Start", "Hold", "Paused", "In Progress", "Completed"];
     
     return (
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
+      <div className="flex flex-wrap gap-6 mt-4">
         {statuses.map((status) => (
           <div key={status} className="flex items-center gap-2">
             <div 
@@ -185,13 +184,13 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
         </Tabs>
       </div>
       
-      <div className="flex-1">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="flex-1 w-full">
+        <ResponsiveContainer width="100%" height="80%">
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 120, bottom: 30 }}
-            barSize={20}
+            margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+            barSize={8}
             barGap={0}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
@@ -206,17 +205,19 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <Tooltip content={<CustomTooltip />} />
             
             {/* Stacked bars for each status */}
-            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} />
-            <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} />
-            <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} />
-            <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} />
-            <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} />
-            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} />
+            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={[0, 0, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        
+        <div className="mt-2">
+          <CustomLegend />
+        </div>
       </div>
-      
-      <CustomLegend />
     </div>
   )
 }
