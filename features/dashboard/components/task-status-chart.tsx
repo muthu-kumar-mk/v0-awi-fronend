@@ -1,216 +1,152 @@
 "use client"
 
-import { useState } from "react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts"
-import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 interface TaskStatusChartProps {
   className?: string
 }
 
-// Data structure for stacked bar chart
-interface TaskData {
-  name: string;
-  Waiting: number;
-  "Yet to Start": number;
-  Hold: number;
-  Paused: number;
-  "In Progress": number;
-  Completed: number;
+// Sample data for the chart
+const outboundData = [
+  { name: "Unloading", waiting: 10, yetToStart: 15, hold: 5, paused: 8, inProgress: 25, completed: 12 },
+  { name: "Sorting", waiting: 8, yetToStart: 12, hold: 3, paused: 5, inProgress: 20, completed: 15 },
+  { name: "IB QA", waiting: 5, yetToStart: 8, hold: 2, paused: 4, inProgress: 15, completed: 10 },
+  { name: "Receiving and Put Away", waiting: 12, yetToStart: 18, hold: 6, paused: 9, inProgress: 22, completed: 14 },
+  { name: "Review Overage / Underage", waiting: 7, yetToStart: 10, hold: 4, paused: 6, inProgress: 18, completed: 16 },
+]
+
+const inboundData = [
+  { name: "Unloading", waiting: 12, yetToStart: 18, hold: 7, paused: 10, inProgress: 30, completed: 15 },
+  { name: "Sorting", waiting: 10, yetToStart: 15, hold: 5, paused: 8, inProgress: 25, completed: 18 },
+  { name: "IB QA", waiting: 8, yetToStart: 12, hold: 4, paused: 6, inProgress: 20, completed: 12 },
+  { name: "Receiving and Put Away", waiting: 15, yetToStart: 22, hold: 8, paused: 12, inProgress: 28, completed: 17 },
+  { name: "Review Overage / Underage", waiting: 9, yetToStart: 14, hold: 6, paused: 9, inProgress: 22, completed: 19 },
+]
+
+// Colors for the bars
+const colors = {
+  waiting: "#A1A1AA", // gray
+  yetToStart: "#1E293B", // dark blue/gray
+  hold: "#EF4444", // red
+  paused: "#F59E0B", // amber
+  inProgress: "#F97316", // orange
+  completed: "#10B981", // green
 }
-
-// Colors for each status
-const statusColors = {
-  "Waiting": "#9AA5B1",
-  "Yet to Start": "#2D3748",
-  "Hold": "#F56565",
-  "Paused": "#ECC94B",
-  "In Progress": "#F6AD55",
-  "Completed": "#38B2AC"
-};
-
-// Inbound data with task types and their status distribution
-const inboundData: TaskData[] = [
-  { 
-    name: "Unloading", 
-    "Waiting": 12, 
-    "Yet to Start": 8, 
-    "Hold": 5, 
-    "Paused": 7, 
-    "In Progress": 10, 
-    "Completed": 6 
-  },
-  { 
-    name: "Sorting", 
-    "Waiting": 10, 
-    "Yet to Start": 9, 
-    "Hold": 6, 
-    "Paused": 8, 
-    "In Progress": 15, 
-    "Completed": 12 
-  },
-  { 
-    name: "IB QA", 
-    "Waiting": 8, 
-    "Yet to Start": 7, 
-    "Hold": 4, 
-    "Paused": 5, 
-    "In Progress": 9, 
-    "Completed": 7 
-  },
-  { 
-    name: "Receiving and\nPut away", 
-    "Waiting": 9, 
-    "Yet to Start": 10, 
-    "Hold": 6, 
-    "Paused": 8, 
-    "In Progress": 14, 
-    "Completed": 11 
-  },
-  { 
-    name: "Review Overage\n/ Underage", 
-    "Waiting": 11, 
-    "Yet to Start": 12, 
-    "Hold": 8, 
-    "Paused": 9, 
-    "In Progress": 16, 
-    "Completed": 14 
-  }
-];
-
-// Outbound data with task types and their status distribution
-const outboundData: TaskData[] = [
-  { 
-    name: "Unloading", 
-    "Waiting": 10, 
-    "Yet to Start": 7, 
-    "Hold": 4, 
-    "Paused": 6, 
-    "In Progress": 9, 
-    "Completed": 5 
-  },
-  { 
-    name: "Sorting", 
-    "Waiting": 9, 
-    "Yet to Start": 8, 
-    "Hold": 5, 
-    "Paused": 7, 
-    "In Progress": 13, 
-    "Completed": 10 
-  },
-  { 
-    name: "IB QA", 
-    "Waiting": 7, 
-    "Yet to Start": 6, 
-    "Hold": 3, 
-    "Paused": 4, 
-    "In Progress": 8, 
-    "Completed": 6 
-  },
-  { 
-    name: "Receiving and\nPut away", 
-    "Waiting": 8, 
-    "Yet to Start": 9, 
-    "Hold": 5, 
-    "Paused": 7, 
-    "In Progress": 12, 
-    "Completed": 9 
-  },
-  { 
-    name: "Review Overage\n/ Underage", 
-    "Waiting": 10, 
-    "Yet to Start": 11, 
-    "Hold": 7, 
-    "Paused": 8, 
-    "In Progress": 14, 
-    "Completed": 12 
-  }
-];
 
 export function TaskStatusChart({ className }: TaskStatusChartProps) {
   const [activeTab, setActiveTab] = useState("outbound")
   const data = activeTab === "outbound" ? outboundData : inboundData
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 rounded-md shadow-sm">
-          <p className="font-medium mb-1">{label.replace('\n', ' ')}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={`tooltip-${index}`} className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: entry.color }}
-              ></div>
-              <span className="text-sm">{`${entry.name}: ${entry.value}`}</span>
-            </div>
-          ))}
-        </div>
-      )
-    }
-    return null
-  }
-
-  // Custom legend that matches the design
-  const CustomLegend = () => {
-    const statuses = ["Waiting", "Yet to Start", "Hold", "Paused", "In Progress", "Completed"];
-    
-    return (
-      <div className="flex flex-wrap gap-6 mt-4">
-        {statuses.map((status) => (
-          <div key={status} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: statusColors[status as keyof typeof statusColors] }}
-            ></div>
-            <span className="text-sm text-gray-600">{status}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 w-full">
-        <ResponsiveContainer width="100%" height="70%">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 0, right: 0, left: 120, bottom: 0 }}
-            barSize={8}
-            barGap={0}
-          >
-            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-            <XAxis type="number" hide />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              tick={{ fontSize: 12 }}
-              width={120}
-              axisLine={false}
-              tickLine={false}
-              tickMargin={20}
-              tickFormatter={(value) => value.replace('\n', ' ')}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            
-            {/* Stacked bars for each status */}
-            <Bar dataKey="Waiting" stackId="a" fill={statusColors["Waiting"]} radius={[8,0,0,8]} />
-            <Bar dataKey="Yet to Start" stackId="a" fill={statusColors["Yet to Start"]} radius={0} />
-            <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={0} />
-            <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={0} />
-            <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={0} />
-            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={[0,8,8,0]} />
-          </BarChart>
-        </ResponsiveContainer>
-        
-        <div className="mt-2">
-          <CustomLegend />
+    <Card className={className}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Task Status</CardTitle>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="outbound">Outbound</TabsTrigger>
+              <TabsTrigger value="inbound">Inbound</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="h-[300px] w-full px-6 pb-6">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
+              barGap={2}
+              barSize={12}
+            >
+              <CartesianGrid horizontal strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis 
+                type="category" 
+                dataKey="name" 
+                width={100}
+                tickLine={false}
+                axisLine={false}
+                tick={{ 
+                  fontSize: 12,
+                  width: 100,
+                  wordWrap: 'break-word',
+                  textAnchor: 'end'
+                }}
+              />
+              <Tooltip 
+                formatter={(value, name) => {
+                  const formattedName = name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1');
+                  return [`${value} tasks`, formattedName];
+                }}
+                labelFormatter={(label) => `${label}`}
+              />
+              <Bar dataKey="waiting" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-waiting-${index}`} fill={colors.waiting} />
+                ))}
+              </Bar>
+              <Bar dataKey="yetToStart" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-yetToStart-${index}`} fill={colors.yetToStart} />
+                ))}
+              </Bar>
+              <Bar dataKey="hold" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-hold-${index}`} fill={colors.hold} />
+                ))}
+              </Bar>
+              <Bar dataKey="paused" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-paused-${index}`} fill={colors.paused} />
+                ))}
+              </Bar>
+              <Bar dataKey="inProgress" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-inProgress-${index}`} fill={colors.inProgress} />
+                ))}
+              </Bar>
+              <Bar dataKey="completed" stackId="a" radius={[0, 4, 4, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-completed-${index}`} fill={colors.completed} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        
+        {/* Legend */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2 px-6 pb-6">
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.waiting }}></div>
+            <span className="text-sm text-gray-600">Waiting</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.yetToStart }}></div>
+            <span className="text-sm text-gray-600">Yet to Start</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.hold }}></div>
+            <span className="text-sm text-gray-600">Hold</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.paused }}></div>
+            <span className="text-sm text-gray-600">Paused</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.inProgress }}></div>
+            <span className="text-sm text-gray-600">In Progress</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.completed }}></div>
+            <span className="text-sm text-gray-600">Completed</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
