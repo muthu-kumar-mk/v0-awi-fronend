@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, QrCode } from "lucide-react"
 import { useLoginMutation } from "@/lib/redux/api/auth"
 import { encryptedMessage } from "@/utils/rsa"
+import { isAuthenticated, redirectToDashboard } from "@/utils/auth"
 
 // Define our form schemas using zod
 const loginSchema = z.object({
@@ -57,6 +58,13 @@ export default function Login() {
     },
   })
 
+  // Check if user is already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      redirectToDashboard()
+    }
+  }, [])
+
   const onSubmit = async (data: LoginFormValues) => {
     setErrorMessage(null)
     
@@ -69,7 +77,7 @@ export default function Login() {
       const response = await login(body)
       
       if ('data' in response && response.data?.statusCode === 200) {
-        router.push("/orders")
+        router.push("/dashboard")
       } else {
         setErrorMessage("Invalid credentials. Please try again.")
       }
