@@ -200,7 +200,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <Bar dataKey="Hold" stackId="a" fill={statusColors["Hold"]} radius={0} />
             <Bar dataKey="Paused" stackId="a" fill={statusColors["Paused"]} radius={0} />
             <Bar dataKey="In Progress" stackId="a" fill={statusColors["In Progress"]} radius={0} />
-            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={0} />
+            <Bar dataKey="Completed" stackId="a" fill={statusColors["Completed"]} radius={[0,8,8,0]} />
           </BarChart>
         </ResponsiveContainer>
         
