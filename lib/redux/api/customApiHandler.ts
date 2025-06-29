@@ -9,41 +9,61 @@ const BASE_URL = process.env.HOST_API_KEY || 'http://localhost:8080/';
 let isRefreshing = false;
 const refreshSubscribers: any = [];
 
-axios.interceptors.response.use(
+// Create axios instance with default config
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 30000, // 30 second timeout
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// Response interceptor for handling common errors
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Get error details
     const status = error?.response?.status;
     const originalRequest = error?.config;
-    // const errorCheckMessageForRedirection = error?.response?.data?.response?.message;
-
+    
+    // If we have a user session
     if (getUserCred('userCred')) {
+      // Handle 403 Forbidden - Access denied
       if (status === 403) {
         resetUserCred();
-        if (window && window.location) {
-          resetUserCred();
-          window.location.pathname = '/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/unauthorized';
         }
+        return Promise.reject(error);
       }
 
-      if (
-        status === 404
-        // && errorCheckMessageForRedirection === 'Invalid id provided.'
-      ) {
-        isRefreshing = true;
-        if (window && window.location) {
-          window.location.pathname = '/404';
+      // Handle 404 Not Found
+      if (status === 404) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/not-found';
         }
+        return Promise.reject(error);
+      }
+      
+      // Handle 500 Server Error
+      if (status === 500) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/server-error';
+        }
+        return Promise.reject(error);
       }
 
+      // Handle 401 Unauthorized - Token refresh
       const getUserData = getUserCred('userCred');
       if (status === 401 && getUserData?.token) {
         if (!isRefreshing) {
           isRefreshing = true;
-          axios
-            .post(`${BASE_URL}core/api/auth/RefreshToken/`, {
-              token: getUserData?.token,
-              refreshToken: getUserData?.refreshToken,
-            })
+          
+          // Try to refresh the token
+          axiosInstance.post(`core/api/auth/RefreshToken/`, {
+            token: getUserData?.token,
+            refreshToken: getUserData?.refreshToken,
+          })
             .then((res: any) => {
               isRefreshing = false;
               const valueToRefresh = {
@@ -55,36 +75,53 @@ axios.interceptors.response.use(
               loginCredentials('warehouseIds', valueToRefresh);
               onRefreshes(res?.data?.response?.token);
             })
-            .catch((e) => {
-              //
+            .catch(() => {
+              isRefreshing = false;
+              // If refresh fails, log out
+              let showMessage = false;
+              resetUserCred();
+              if (!showMessage) {
+                errorMessage("You've been logged out due to inactivity, please login again.");
+                showMessage = true;
+              }
+              if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+              }
             });
-        } else if (
-          status === 401 &&
-          error?.response?.data?.response?.message === 'Invalid refresh token.'
-        ) {
-          let showMessage = false;
-          resetUserCred();
-          if (!showMessage) {
-            !showMessage &&
-              errorMessage("You've been logged out due to inactivity, please login again.");
-            showMessage = true;
-          }
-          if (window && window.location) {
-            resetUserCred();
-            window.location.pathname = '/login';
-            showMessage = false;
-          }
         }
 
-        const retryOrigReq = new Promise((resolve, reject) => {
+        // Queue the original request to retry after token refresh
+        const retryOrigReq = new Promise((resolve) => {
           subscribeTokenRefresh((token: any) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(axios(originalRequest));
+            resolve(axiosInstance(originalRequest));
           });
         });
         return retryOrigReq;
       }
     }
+    
+    // Network errors
+    if (!error.response) {
+      if (typeof window !== 'undefined' && navigator && !navigator.onLine) {
+        window.location.href = '/no-internet';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// Request interceptor to add auth token
+axiosInstance.interceptors.request.use(
+  (config: any) => {
+    const getUserData = getUserCred('userCred');
+    if (getUserData && getUserData?.token) {
+      config.headers.Authorization = `Bearer ${getUserData?.token}`;
+    }
+    return config;
+  },
+  (error: any) => {
     return Promise.reject(error);
   }
 );
@@ -94,53 +131,34 @@ function subscribeTokenRefresh(cb: any) {
 }
 
 function onRefreshes(token: any) {
-  refreshSubscribers.map((cb: any) => cb(token));
+  refreshSubscribers.forEach((cb: any) => cb(token));
+  // Clear subscribers after calling them
+  refreshSubscribers.length = 0;
 }
 
 const customApiHandler =
   (): any =>
   async ({ url, method, body, params, needError, successCode }: any) => {
-    console.log("URL:", url);
-    console.log(`${BASE_URL}${url}`);
-    console.log("Body:", body);
-    
     try {
-      // Configure request interceptor
-      const interceptorId = axios.interceptors.request.use(
-        (config: any) => {
-          const getUserData = getUserCred('userCred');
-          if (getUserData && getUserData?.token) {
-            config.headers.Authorization = `Bearer ${getUserData?.token}`;
-          }
-          return config;
-        },
-        (error: any) => {
-          console.log("Request interceptor error:", error);
-          return Promise.reject(error);
-        }
-      );
-
-      // Make the request
-      const result = await axios({
-        url: `${BASE_URL}${url}`,
+      // Make the request using our configured axios instance
+      const result = await axiosInstance({
+        url,
         method,
         data: body,
         params,
-        timeout: 30000, // 30 second timeout
       });
       
-      // Clean up interceptor after request
-      axios.interceptors.request.eject(interceptorId);
-      
-      // Handle success
-      successCode && result?.data?.statusCode === 200 && successMessage(successCode);
+      // Show success message if needed
+      if (successCode && result?.data?.statusCode === 200) {
+        successMessage(successCode);
+      }
+
       return { data: result.data };
     } catch (error: any) {
-      console.log("API Error:", error);
+      console.error("API Error:", error);
       
-      // For development/testing purposes - simulate successful response
+      // For development/testing - simulate successful response for specific endpoints
       if (process.env.NODE_ENV === 'development' && url.includes('Order/GetAll')) {
-        console.log("Returning mock data for development");
         return { 
           data: { 
             statusCode: 200, 
@@ -152,19 +170,24 @@ const customApiHandler =
         };
       }
       
-      // Handle error
+      // Handle specific HTTP status codes
+      const status = error?.response?.status;
+      
+      // Show error message if needed
       if (needError) {
-        error?.response?.data?.response?.validationFailed
-          ? errorMessage(error?.response?.data?.response?.validationErrors?.[0]?.value)
-          : errorMessage(error?.response?.data?.response?.message || "Network connection error");
+        if (error?.response?.data?.response?.validationFailed) {
+          errorMessage(error?.response?.data?.response?.validationErrors?.[0]?.value);
+        } else {
+          errorMessage(error?.response?.data?.response?.message || "Network connection error");
+        }
       }
       
       // Return error response or fallback
       return { 
         data: error?.response?.data || { 
-          statusCode: 500, 
+          statusCode: status || 500, 
           response: { 
-            message: "Network connection error", 
+            message: error?.message || "Network connection error", 
             items: [], 
             totalCount: 0 
           } 
