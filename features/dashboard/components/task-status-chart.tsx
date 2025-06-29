@@ -102,7 +102,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                   fontSize: 12,
                   width: 100,
                   wordWrap: 'break-word',
-                  textAnchor: 'start'
+                  textAnchor: 'end'
                 }}
               />
               <Tooltip 
