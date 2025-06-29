@@ -40,6 +40,26 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
   const [activeTab, setActiveTab] = useState("outbound")
   const data = activeTab === "outbound" ? outboundData : inboundData
 
+  // Calculate the maximum value for X-axis
+  const getMaxValue = () => {
+    let max = 0;
+    data.forEach(item => {
+      const total = item.waiting + item.yetToStart + item.hold + item.paused + item.inProgress + item.completed;
+      if (total > max) max = total;
+    });
+    return max;
+  };
+
+  // Generate custom ticks with increments of 10
+  const generateCustomTicks = () => {
+    const maxValue = getMaxValue();
+    const ticks = [];
+    for (let i = 0; i <= maxValue; i += 10) {
+      ticks.push(i);
+    }
+    return ticks;
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -64,7 +84,11 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               barSize={12}
             >
               <CartesianGrid horizontal={false} vertical={{ strokeDasharray: "3 3" }} />
-              <XAxis type="number" hide />
+              <XAxis 
+                type="number" 
+                hide={false} 
+                ticks={generateCustomTicks()}
+              />
               <YAxis 
                 type="category" 
                 dataKey="name" 
