@@ -89,7 +89,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               <XAxis 
                 type="number" 
                 ticks={generateCustomTicks()}
-                domain={[0, 'dataMax + 20']}
+                domain={[0, 'dataMax + 10']}
               />
               <YAxis 
                 type="category" 
