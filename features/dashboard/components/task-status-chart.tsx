@@ -47,14 +47,16 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
       const total = item.waiting + item.yetToStart + item.hold + item.paused + item.inProgress + item.completed;
       if (total > max) max = total;
     });
-    return max;
+    // Round up to the nearest 10
+    return Math.ceil(max / 10) * 10;
   };
 
   // Generate custom ticks with increments of 10
   const generateCustomTicks = () => {
     const maxValue = getMaxValue();
     const ticks = [];
-    for (let i = 0; i <= maxValue; i += 10) {
+    // Create ticks from 0 to maxValue + 20 (two extra ticks) with step of 10
+    for (let i = 0; i <= maxValue + 20; i += 10) {
       ticks.push(i);
     }
     return ticks;
@@ -79,15 +81,15 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <BarChart
               data={data}
               layout="vertical"
-              margin={{ top: 20, right: 30, left: -25, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
               barGap={2}
               barSize={12}
             >
-              <CartesianGrid horizontal={false} vertical={{ strokeDasharray: "3 3" }} />
+              <CartesianGrid horizontal strokeDasharray="3 3" />
               <XAxis 
                 type="number" 
-                hide={true} 
                 ticks={generateCustomTicks()}
+                domain={[0, 'dataMax + 20']}
               />
               <YAxis 
                 type="category" 
@@ -109,7 +111,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                 }}
                 labelFormatter={(label) => `${label}`}
               />
-              <Bar dataKey="waiting" stackId="a" radius={[9, 0, 0, 8]}>
+              <Bar dataKey="waiting" stackId="a" radius={[0, 0, 0, 0]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-waiting-${index}`} fill={colors.waiting} />
                 ))}
@@ -134,7 +136,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                   <Cell key={`cell-inProgress-${index}`} fill={colors.inProgress} />
                 ))}
               </Bar>
-              <Bar dataKey="completed" stackId="a" radius={[0, 8, 8, 0]}>
+              <Bar dataKey="completed" stackId="a" radius={[0, 4, 4, 0]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-completed-${index}`} fill={colors.completed} />
                 ))}
