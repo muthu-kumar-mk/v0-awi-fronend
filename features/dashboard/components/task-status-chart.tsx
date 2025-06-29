@@ -63,7 +63,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
               barGap={2}
               barSize={12}
             >
-              <CartesianGrid horizontal strokeDasharray="3 3" horizontal={false} />
+              <CartesianGrid horizontal={false} vertical={{ strokeDasharray: "3 3" }} />
               <XAxis type="number" hide  ticks={10} />
               <YAxis 
                 type="category" 
