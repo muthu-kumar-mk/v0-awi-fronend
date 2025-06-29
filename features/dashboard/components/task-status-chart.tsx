@@ -112,7 +112,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                 }}
                 labelFormatter={(label) => `${label}`}
               />
-              <Bar dataKey="waiting" stackId="a" radius={[0, 0, 0, 0]}>
+              <Bar dataKey="waiting" stackId="a" radius={[8, 0, 0, 8]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-waiting-${index}`} fill={colors.waiting} />
                 ))}
@@ -137,7 +137,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                   <Cell key={`cell-inProgress-${index}`} fill={colors.inProgress} />
                 ))}
               </Bar>
-              <Bar dataKey="completed" stackId="a" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="completed" stackId="a" radius={[0, 8, 8, 0]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-completed-${index}`} fill={colors.completed} />
                 ))}
