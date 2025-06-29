@@ -48,11 +48,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // Check access permissions if needed
-  const userKey = getUserCred('userCred')?.role;
-  if (!userKey || !checkIfAccess(userKey)) {
-    router.push('/login');
-    return null;
-  }
+  // const userKey = getUserCred('userCred')?.role;
+  // if (!userKey || !checkIfAccess(userKey)) {
+  //   router.push('/login');
+  //   return null;
+  // }
 
   // User is authenticated and has access
   return <>{children}</>;
