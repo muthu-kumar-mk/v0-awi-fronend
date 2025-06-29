@@ -1,23 +1,45 @@
 import { AWI_USERS } from '@/constants/common';
 import { EMAIL_REGEX } from '@/constants/regex';
 import { isNull, isString, isUndefined, isEmpty } from 'lodash';
+import Cookies from 'js-cookie';
 
 export const loginCredentials = (key: string, value: any) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      // Store in localStorage
+      localStorage.setItem(key, JSON.stringify(value));
+      
+      // Also store in cookies for middleware access
+      if (key === 'userCred' && value?.token) {
+        Cookies.set('userCred', JSON.stringify({
+          token: value.token,
+          id: value.id,
+          role: value.role
+        }), { expires: 1, path: '/' }); // 1 day expiry
+      }
+    } catch (error) {
+      console.error('Error storing credentials:', error);
+    }
   }
 };
 
 export const getUserCred = (key: string) => {
   if (typeof window !== 'undefined') {
-    const storedUserCredStr: any = window.localStorage.getItem(key);
-    if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      try {
+    try {
+      const storedUserCredStr: any = window.localStorage.getItem(key);
+      if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
         return JSON.parse(storedUserCredStr);
-      } catch (error) {
-        console.error('Error parsing user credentials:', error);
-        return null;
       }
+      
+      // Fallback to cookies for middleware
+      if (key === 'userCred') {
+        const cookieValue = Cookies.get('userCred');
+        if (cookieValue) {
+          return JSON.parse(cookieValue);
+        }
+      }
+    } catch (error) {
+      console.error('Error retrieving credentials:', error);
     }
   }
   return null;
@@ -25,10 +47,17 @@ export const getUserCred = (key: string) => {
 
 export const resetUserCred = () => {
   if (typeof window !== 'undefined') {
-    window.localStorage.clear();
-    window.localStorage.removeItem('userCred');
-    window.localStorage.removeItem('orderListFilter');
-    window.localStorage.removeItem('orderCurrentTab');
+    try {
+      // Clear localStorage
+      localStorage.removeItem('userCred');
+      localStorage.removeItem('orderListFilter');
+      localStorage.removeItem('orderCurrentTab');
+      
+      // Clear cookies
+      Cookies.remove('userCred', { path: '/' });
+    } catch (error) {
+      console.error('Error resetting credentials:', error);
+    }
   }
   return null;
 };

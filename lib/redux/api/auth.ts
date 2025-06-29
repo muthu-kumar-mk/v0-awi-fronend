@@ -8,10 +8,8 @@ export const authApi = tagInjection.injectEndpoints({
   endpoints: (builder: any) => ({
     login: builder.mutation({
       query(body: any) {
-        console.log(body)
         return {
           url: `core/api/auth/login/`,
-          // url:`/api/auth/login`,
           method: 'post',
           body,
           needError: true,
@@ -20,9 +18,16 @@ export const authApi = tagInjection.injectEndpoints({
       },
       invalidatesTags: ['UserProfile'],
       transformResponse: (res: any) => {
-        console.log(res)
-        loginCredentials('userCred', res?.response);
-        loginCredentials('warehouseIds', res?.response);
+        if (res?.response) {
+          // Store user credentials in localStorage
+          loginCredentials('userCred', res?.response);
+          loginCredentials('warehouseIds', res?.response);
+          
+          // Also store in cookies for middleware access
+          if (typeof document !== 'undefined') {
+            document.cookie = `userCred=${JSON.stringify(res?.response)}; path=/; max-age=86400`;
+          }
+        }
         return res;
       },
     }),

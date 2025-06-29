@@ -10,11 +10,10 @@ export default function HomePage() {
   
   // Handle authentication and redirection
   useEffect(() => {
-    try {
-      const userCred = getUserCred("userCred");
-      
-      // Use a timeout to ensure the router is ready
-      const timer = setTimeout(() => {
+    const checkAuthAndRedirect = () => {
+      try {
+        const userCred = getUserCred("userCred");
+        
         if (userCred?.token) {
           // Redirect to the orders page if the token exists
           router.push("/orders");
@@ -22,14 +21,18 @@ export default function HomePage() {
           // Redirect to the login page if the token is missing
           router.push("/login");
         }
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Fallback to login page on error
-      router.push("/login");
-    }
+      } catch (error) {
+        console.error("Navigation error:", error);
+        // Fallback to login page on error
+        router.push("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Use a timeout to ensure the router is ready and localStorage is accessible
+    const timer = setTimeout(checkAuthAndRedirect, 300);
+    return () => clearTimeout(timer);
   }, [router]);
   
   // Network status check
@@ -49,15 +52,6 @@ export default function HomePage() {
       };
     }
   }, [router]);
-  
-  // Set loading to false after a delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
   
   // Show a loading indicator while redirecting
   return (

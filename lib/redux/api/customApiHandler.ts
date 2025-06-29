@@ -3,8 +3,9 @@ import axios from 'axios';
 import { errorMessage } from '@/utils/errorMessage';
 import { successMessage } from '@/utils/successMessage';
 import { getUserCred, loginCredentials, resetUserCred } from '@/utils/helper';
+import { handleApiError } from '@/utils/errorHandler';
 
-const BASE_URL = process.env.HOST_API_KEY || 'http://localhost:8080/';
+const BASE_URL = process.env.HOST_API_KEY || "http://localhost:8080/";
 
 let isRefreshing = false;
 const refreshSubscribers: any = [];
@@ -170,9 +171,6 @@ const customApiHandler =
         };
       }
       
-      // Handle specific HTTP status codes
-      const status = error?.response?.status;
-      
       // Show error message if needed
       if (needError) {
         if (error?.response?.data?.response?.validationFailed) {
@@ -185,7 +183,7 @@ const customApiHandler =
       // Return error response or fallback
       return { 
         data: error?.response?.data || { 
-          statusCode: status || 500, 
+          statusCode: error?.response?.status || 500, 
           response: { 
             message: error?.message || "Network connection error", 
             items: [], 

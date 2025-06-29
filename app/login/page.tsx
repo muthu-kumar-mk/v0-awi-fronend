@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, QrCode } from "lucide-react"
 import { useLoginMutation } from "@/lib/redux/api/auth"
 import { encryptedMessage } from "@/utils/rsa"
+import { getUserCred } from "@/utils/helper"
 
 // Define our form schemas using zod
 const loginSchema = z.object({
@@ -31,8 +32,16 @@ export default function Login() {
   const [isResetPassword, setIsResetPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
  
-  
   const [login, { isLoading }] = useLoginMutation()
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const userCred = getUserCred("userCred")
+    if (userCred?.token) {
+      router.push("/orders")
+    }
+  }, [router])
+  
   // Setup react-hook-form with zod resolver
   const { 
     register, 
@@ -65,11 +74,14 @@ export default function Login() {
         username: encryptedMessage(data.email),
         password: encryptedMessage(data.password),
       }
-      console.log("Login body:", body)
-      const response = await login(body)
       
-      if ('data' in response && response.data?.statusCode === 200) {
-        router.push("/orders")
+      const response = await login(body).unwrap()
+      
+      if (response?.statusCode === 200) {
+        // Successful login - redirect with a slight delay to ensure credentials are saved
+        setTimeout(() => {
+          router.push("/orders")
+        }, 100)
       } else {
         setErrorMessage("Invalid credentials. Please try again.")
       }

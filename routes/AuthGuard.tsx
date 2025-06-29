@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { checkIfAccess, getUserCred } from '@/utils/helper';
+import { getUserCred } from '@/utils/helper';
 
 // ----------------------------------------------------------------------
 
@@ -18,19 +18,23 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     // Check authentication status
-    const getUserData = getUserCred('userCred');
-    const authenticated = !!getUserData?.token;
-    setIsAuthenticated(authenticated);
-    
-    // Initialize after a short delay
-    setTimeout(() => {
+    const checkAuth = () => {
+      const getUserData = getUserCred('userCred');
+      const authenticated = !!getUserData?.token;
+      setIsAuthenticated(authenticated);
+      
+      // Initialize after a short delay
       setIsInitialized(true);
       
       // Redirect if not authenticated
       if (!authenticated) {
         router.push('/login');
       }
-    }, 500);
+    };
+    
+    // Run the check with a small delay to ensure localStorage is accessible
+    const timer = setTimeout(checkAuth, 100);
+    return () => clearTimeout(timer);
   }, [router]);
 
   // Show loading indicator while initializing
@@ -46,13 +50,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   if (!isAuthenticated) {
     return null;
   }
-
-  // Check access permissions if needed
-  // const userKey = getUserCred('userCred')?.role;
-  // if (!userKey || !checkIfAccess(userKey)) {
-  //   router.push('/login');
-  //   return null;
-  // }
 
   // User is authenticated and has access
   return <>{children}</>;

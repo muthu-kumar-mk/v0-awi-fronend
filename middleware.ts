@@ -5,31 +5,43 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   // Get the pathname
   const path = request.nextUrl.pathname
-
-  // Check if the path is for a protected route
-  const isProtectedRoute = 
-    path !== '/login' && 
-    !path.startsWith('/api/') && 
-    !path.includes('/_next/') &&
-    !path.includes('/favicon.ico') &&
-    !path.includes('/no-internet') &&
-    !path.includes('/not-found') &&
-    !path.includes('/unauthorized') &&
-    !path.includes('/server-error')
-
-  // Get the token from the cookies
-  const token = request.cookies.get('userCred')?.value
-
-  // If it's a protected route and there's no token, redirect to login
-  if (isProtectedRoute && !token) {
+  
+  // Public paths that don't require authentication
+  const publicPaths = [
+    '/login',
+    '/api/',
+    '/_next/',
+    '/favicon.ico',
+    '/no-internet',
+    '/not-found',
+    '/unauthorized',
+    '/server-error',
+    '/assets/'
+  ]
+  
+  // Check if the current path is public
+  const isPublicPath = publicPaths.some(publicPath => 
+    path === publicPath || path.startsWith(publicPath)
+  )
+  
+  // If it's a public path, allow access
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
+  
+  // Check for authentication
+  const userCred = request.cookies.get('userCred')
+  
+  // If no authentication and not a public path, redirect to login
+  if (!userCred?.value) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
-
-  // Continue with the request
+  
+  // User is authenticated, allow access
   return NextResponse.next()
 }
 
-// See "Matching Paths" below to learn more
+// Configure which paths the middleware runs on
 export const config = {
   matcher: [
     /*
