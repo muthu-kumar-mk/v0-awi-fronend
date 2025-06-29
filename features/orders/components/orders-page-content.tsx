@@ -197,17 +197,24 @@ export function OrdersPageContent() {
     data: ordersData,
     isFetching,
     refetch,
+    error
   } = useGetOrderListQuery(apiPayload(), {
     refetchOnMountOrArgChange: true,
     skip: false,
   });
 
+  // Log any errors for debugging
+  useEffect(() => {
+    if (error) {
+      console.error("API Error:", error);
+    }
+  }, [error]);
+
   // Process API response and update orders state
   useEffect(() => {
-    console.log("Entering mapping data", ordersData)
     if (ordersData?.items) {
       const { items, totalCount } = ordersData;
-      console.log("starting mapping")
+      
       // Map API response to our Order interface
       const mappedOrders = items.map((item: any) => ({
         orderId: item.orderId || item.transactionId,
@@ -218,21 +225,27 @@ export function OrdersPageContent() {
         channel: item.orderCreationTypeId || 'Manual',
         appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
         status: item.status,
-       
+        moveType: item.moveType || '',
+        serviceType: item.serviceType || '',
+        location: item.location || '',
+        trackingNo: item.trackingNo || '',
+        createdOn: item.createdOn ? new Date(item.createdOn).toLocaleDateString() : '-',
       }));
       
       // If it's the first page, replace orders; otherwise append
       if (filter.pageIndex === 1) {
-        console.log(mappedOrders)
         setOrders(mappedOrders);
       } else {
-        console.log(mappedOrders)
         setOrders(prev => [...prev, ...mappedOrders]);
       }
       
       // Check if there are more pages to load
       const hasMore = items.length > 0 && (filter.pageIndex * filter.pageSize) < totalCount;
       setHasNextPage(hasMore);
+    } else if (ordersData && !ordersData.items && filter.pageIndex === 1) {
+      // If we got a response but no items, clear the orders list
+      setOrders([]);
+      setHasNextPage(false);
     }
   }, [ordersData, filter.pageIndex, filter.pageSize]);
 
@@ -421,19 +434,6 @@ export function OrdersPageContent() {
     }
   }, [filter]);
 
-  // Calculate footer data
-  // const footerData = {
-  //   transactionId: `Total: ${ordersData?.totalCount || 0} orders`,
-  //   customer: '',
-  //   orderType: '',
-  //   referenceId: '',
-  //   channel: '',
-  //   appointmentDate: '',
-  //   status: `${orders.filter(o => o.status === 'Completed').length} completed`,
-  //   moveType: `${orders.filter(o => o.moveType === 'Inbound').length} inbound`,
-  //   createdOn: '',
-  // };
-
   return (
     <div className="bg-dashboard-background min-h-screen flex flex-col">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -467,7 +467,6 @@ export function OrdersPageContent() {
               onRowClick={handleRowClick}
               // enableBulkSelection={true}
               onBulkAction={handleBulkAction}
-
               isLoading={isFetching && filter.pageIndex === 1}
               emptyMessage={isFetching ? "Loading orders..." : "No orders found matching your criteria"}
             >
