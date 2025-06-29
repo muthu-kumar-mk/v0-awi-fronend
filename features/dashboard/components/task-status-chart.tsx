@@ -99,7 +99,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                 tickLine={false}
                 axisLine={false}
                 tick={{ 
-                  fontSize: 10,
+                  fontSize: 12,
                   width: 100,
                   wordWrap: 'break-word',
                   textAnchor: 'end'
