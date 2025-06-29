@@ -21,7 +21,7 @@ axios.interceptors.response.use(
         resetUserCred();
         if (window && window.location) {
           resetUserCred();
-          window.location.pathname = '/auth/login';
+          window.location.pathname = '/login';
         }
       }
 
@@ -71,7 +71,7 @@ axios.interceptors.response.use(
           }
           if (window && window.location) {
             resetUserCred();
-            window.location.pathname = '/auth/login';
+            window.location.pathname = '/login';
             showMessage = false;
           }
         }

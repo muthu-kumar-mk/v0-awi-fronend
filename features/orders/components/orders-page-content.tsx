@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { PageHeader } from "@/features/shared/components/page-header"
 import { OrdersFilter } from "./orders-filter"
-import { MainTable, type MainTableColumn } from "@/features/shared/components/main-table"
+import { AdvancedTable, type AdvancedTableColumn } from "@/features/shared/components/advanced-table"
 import { useGetOrderListQuery } from "@/lib/redux/api/orderManagement"
 import { isEmpty } from 'lodash';
 
@@ -44,11 +44,10 @@ dateCurrent.setHours(23, 59, 59, 999);
 
 export const defaultOrderFilter = {
   pageIndex: 1,
-  pageSize: 20, // Reduced page size for better performance
+  pageSize: 20,
   searchKey: '',
   sortColumn: '',
   sortDirection: '',
-  //
   orderListingFilterType: 'RequestCreated',
   orderListingFilterTypeOption: 'Custom',
   fromDate: dateFrom.toISOString(),
@@ -211,6 +210,7 @@ export function OrdersPageContent() {
       console.log("starting mapping")
       // Map API response to our Order interface
       const mappedOrders = items.map((item: any) => ({
+        orderId: item.orderId || item.transactionId,
         transactionId: item.transactionId,
         customer: item.customer,
         orderType: item.orderType,
@@ -218,6 +218,7 @@ export function OrdersPageContent() {
         channel: item.orderCreationTypeId || 'Manual',
         appointmentDate: item.appointmentDate ? new Date(item.appointmentDate).toLocaleDateString() : '-',
         status: item.status,
+       
       }));
       
       // If it's the first page, replace orders; otherwise append
@@ -235,7 +236,7 @@ export function OrdersPageContent() {
     }
   }, [ordersData, filter.pageIndex, filter.pageSize]);
 
-  // Function to load more data
+  // Function to load more data for infinite scroll
   const fetchNextPage = async () => {
     if (isLoadingMore || !hasNextPage) return;
     
@@ -255,13 +256,54 @@ export function OrdersPageContent() {
     }
   };
 
-  const columns: MainTableColumn<Order>[] = [
+  // Handle sorting
+  const handleSort = useCallback((column: string, direction: 'asc' | 'desc') => {
+    setFilter(prev => ({
+      ...prev,
+      sortColumn: column,
+      sortDirection: direction,
+      pageIndex: 1 // Reset to first page on sort
+    }));
+    setSearchTrigger(prev => prev + 1);
+  }, []);
+
+  // Handle bulk actions
+  const handleBulkAction = async (action: string, selectedRows: Order[]) => {
+    const orderIds = selectedRows.map(order => order.orderId);
+    
+    try {
+      switch (action) {
+        case 'export':
+          // Export selected orders
+          console.log('Exporting orders:', orderIds);
+          // Call your export API
+          break;
+        case 'cancel':
+          // Cancel selected orders
+          console.log('Cancelling orders:', orderIds);
+          // Call your cancel API
+          break;
+        case 'update-status':
+          // Update status of selected orders
+          console.log('Updating status for orders:', orderIds);
+          // Call your update API
+          break;
+        default:
+          console.log('Bulk action:', action, selectedRows);
+      }
+    } catch (error) {
+      console.error('Bulk action failed:', error);
+    }
+  };
+
+  const columns: AdvancedTableColumn<Order>[] = [
     {
       key: "transactionId",
       header: "Transaction ID",
       render: (value: string) => <span className="font-medium text-blue-600">{value}</span>,
       sortable: true,
       minWidth: 140,
+      // sticky: 'left',
     },
     {
       key: "customer",
@@ -365,6 +407,7 @@ export function OrdersPageContent() {
       sortable: true,
       minWidth: 140,
     },
+   
   ]
 
   const handleRowClick = (order: Order) => {
@@ -377,6 +420,19 @@ export function OrdersPageContent() {
       localStorage.setItem('orderListFilter', JSON.stringify(filter));
     }
   }, [filter]);
+
+  // Calculate footer data
+  // const footerData = {
+  //   transactionId: `Total: ${ordersData?.totalCount || 0} orders`,
+  //   customer: '',
+  //   orderType: '',
+  //   referenceId: '',
+  //   channel: '',
+  //   appointmentDate: '',
+  //   status: `${orders.filter(o => o.status === 'Completed').length} completed`,
+  //   moveType: `${orders.filter(o => o.moveType === 'Inbound').length} inbound`,
+  //   createdOn: '',
+  // };
 
   return (
     <div className="bg-dashboard-background min-h-screen flex flex-col">
@@ -404,17 +460,31 @@ export function OrdersPageContent() {
           </div>
 
           {/* Table Section - 928px width, responsive, remaining viewport */}
-          <div className="flex-1">
-            <MainTable
+          <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200">
+            <AdvancedTable.Root
               data={orders}
               columns={columns}
               onRowClick={handleRowClick}
-              hasNextPage={hasNextPage}
-              fetchNextPage={fetchNextPage}
-              isFetchingNextPage={isLoadingMore}
+              // enableBulkSelection={true}
+              onBulkAction={handleBulkAction}
+
               isLoading={isFetching && filter.pageIndex === 1}
               emptyMessage={isFetching ? "Loading orders..." : "No orders found matching your criteria"}
-            />
+            >
+              {/* <AdvancedTable.Loading / */}
+              <AdvancedTable.Container
+                hasNextPage={hasNextPage}
+                fetchNextPage={fetchNextPage}
+                isFetchingNextPage={isLoadingMore}
+              >
+                <AdvancedTable.Table>
+                  <AdvancedTable.Header />
+                  <AdvancedTable.Body />
+                  {/* <AdvancedTable.Footer footerData={footerData} /> */}
+                </AdvancedTable.Table>
+              </AdvancedTable.Container>
+              {/* <AdvancedTable.BulkActions /> */}
+            </AdvancedTable.Root>
           </div>
         </div>
       </div>

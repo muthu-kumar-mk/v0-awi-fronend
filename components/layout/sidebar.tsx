@@ -2,7 +2,7 @@
 import { LayoutDashboard, CheckSquare, Package, Archive, Settings, Truck, Bell, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-
+import { useLogoutMutation } from "@/lib/redux/api/profile"
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
@@ -19,6 +19,21 @@ const navigationItems = [
 ]
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+
+  const [logout, getStatus] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      const { data } = await logout();
+      if (data?.response) {
+
+        if (window) window.location.href = "/login";
+      }
+    } catch (error) {
+      //
+    }
+  };
+
   return (
     <>
       {/* Backdrop Overlay */}
@@ -84,7 +99,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           {/* User Avatar */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center" onClick={handleLogout}>
             <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
               <span className="text-white text-xs">😊</span>
             </div>

@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import AuthGuard from "@/routes/AuthGuard"
 
 const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
 
@@ -33,57 +34,60 @@ export default function DashboardPage() {
     const [selectedWarehouseValue, setSelectedWarehouseValue] = useState(warehouseOptions[0].value)
 
   return (
-    <div className="bg-dashboard-background min-h-screen">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <AuthGuard>
+      <div className="bg-dashboard-background min-h-screen">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main content - NO margin shift, sidebar overlays */}
-      <div className="px-4">
-        <div className="space-y-dashboard-gap">
-          {/* Combined Page Header */}
-          <PageHeader
-            title="Dashboard"
-            breadcrumbItems={breadcrumbItems}
-            filterValue="abisec"
-            filterOptions={filterOptions}
-            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-            actions={
-              <div className="w-[214px]">
-               <Select value={selectedWarehouseValue} onValueChange={setSelectedWarehouseValue}>
-                  <SelectTrigger className="w-[214px] text-gray-700 border-gray-300 hover:bg-gray-50">
-                    <SelectValue placeholder="Select Warehouse" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouseOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            }
-          />
-
-          {/* Order Status Section */}
-          <OrderStatusSection />
-
-          {/* Chart Containers */}
-          <div className="flex gap-chart-gap">
-            <ChartPlaceholder
-              title="Task Status"
-              description="Horizontal bar chart showing task progress"
-              className="w-chart-container flex-1 "
+        {/* Main content - NO margin shift, sidebar overlays */}
+        <div className="px-4">
+          <div className="space-y-dashboard-gap">
+            {/* Combined Page Header */}
+            <PageHeader
+              title="Dashboard"
+              breadcrumbItems={breadcrumbItems}
+              filterValue="abisec"
+              filterOptions={filterOptions}
+              onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+              actions={
+                <div className="w-[214px]">
+                <Select value={selectedWarehouseValue} onValueChange={setSelectedWarehouseValue}>
+                    <SelectTrigger className="w-[214px] text-gray-700 border-gray-300 hover:bg-gray-50">
+                      <SelectValue placeholder="Select Warehouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouseOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              }
             />
-            <TaskStatusSummaryChart
-              className="w-chart-container flex-1"
-            />
+
+            {/* Order Status Section */}
+            <OrderStatusSection />
+
+            {/* Chart Containers */}
+            <div className="flex gap-chart-gap">
+              <ChartPlaceholder
+                title="Task Status"
+                description="Horizontal bar chart showing task progress"
+                className="w-chart-container flex-1 "
+              />
+              <TaskStatusSummaryChart
+                className="w-chart-container flex-1"
+              />
+            </div>
+
+            {/* Tables */}
+            <CurrentTasksTable />
+            <NeedsAttentionTable />
           </div>
-
-          {/* Tables */}
-          <CurrentTasksTable />
-          <NeedsAttentionTable />
         </div>
       </div>
-    </div>
+    </AuthGuard>
   )
+
 }
