@@ -17,21 +17,21 @@ interface TaskStatusData {
 }
 
 const inboundData: TaskStatusData[] = [
-  { name: "Waiting", value: 47, color: "#9AA5B1" },
-  { name: "Yet to Start", value: 82, color: "#2D3748" },
-  { name: "In Progress", value: 63, color: "#F6AD55" },
-  { name: "On Hold", value: 15, color: "#F56565" },
-  { name: "Paused", value: 15, color: "#ECC94B" },
-  { name: "Completed", value: 29, color: "#38B2AC" },
+  { name: "Waiting", value: 47, color: "#A1A1AA" },
+  { name: "Yet to Start", value: 82, color: "#1E293B" },
+  { name: "In Progress", value: 63, color: "#F97316" },
+  { name: "On Hold", value: 15, color: "#EF4444" },
+  { name: "Paused", value: 15, color: "#F59E0B" },
+  { name: "Completed", value: 29, color: "#10B981" },
 ]
 
 const outboundData: TaskStatusData[] = [
-  { name: "Waiting", value: 38, color: "#9AA5B1" },
-  { name: "Yet to Start", value: 65, color: "#2D3748" },
-  { name: "In Progress", value: 72, color: "#F6AD55" },
-  { name: "On Hold", value: 12, color: "#F56565" },
-  { name: "Paused", value: 18, color: "#ECC94B" },
-  { name: "Completed", value: 35, color: "#38B2AC" },
+  { name: "Waiting", value: 38, color: "#A1A1AA" },
+  { name: "Yet to Start", value: 65, color: "#1E293B" },
+  { name: "In Progress", value: 72, color: "#F97316" },
+  { name: "On Hold", value: 12, color: "#EF4444" },
+  { name: "Paused", value: 18, color: "#F59E0B" },
+  { name: "Completed", value: 35, color: "#10B981" },
 ]
 
 export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
@@ -71,6 +71,18 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
   }
 
   return (
+    <Card className={className}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Task Status Summary</CardTitle>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="outbound">Outbound</TabsTrigger>
+              <TabsTrigger value="inbound">Inbound</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </CardHeader>
       <CardContent className="flex flex-col h-[calc(100%-60px)]">
         <div className="flex-1 flex">
           <div className="w-1/2 relative">
@@ -116,5 +128,6 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
           </div>
         </div>
       </CardContent>
+    </Card>
   )
 }
