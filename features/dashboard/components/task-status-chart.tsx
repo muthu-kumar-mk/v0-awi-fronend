@@ -81,7 +81,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <BarChart
               data={data}
               layout="vertical"
-              margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: -25, bottom: 5 }}
               barGap={2}
               barSize={12}
             >
