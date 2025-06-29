@@ -148,7 +148,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
         
         {/* Legend */}
         <div className="flex flex-wrap gap-x-6 gap-y-2 px-6 pb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.waiting }}></div>
             <span className="text-sm text-gray-600">Waiting</span>
           </div>
