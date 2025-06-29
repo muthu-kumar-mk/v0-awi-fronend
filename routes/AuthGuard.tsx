@@ -25,17 +25,21 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     // Initialize after a short delay
     setTimeout(() => {
       setIsInitialized(true);
+      
+      // Redirect if not authenticated
+      if (!authenticated) {
+        router.push('/login');
+      }
     }, 500);
-    
-    // Redirect if not authenticated
-    if (!authenticated) {
-      router.push('/login');
-    }
   }, [router]);
 
-  // Show nothing while initializing
+  // Show loading indicator while initializing
   if (!isInitialized) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-12 h-12 border-4 border-gray-300 border-t-amber-500 rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   // If not authenticated, we've already redirected
@@ -45,7 +49,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // Check access permissions if needed
   const userKey = getUserCred('userCred')?.role;
-  if (!checkIfAccess(userKey)) {
+  if (!userKey || !checkIfAccess(userKey)) {
     router.push('/login');
     return null;
   }

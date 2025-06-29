@@ -4,33 +4,32 @@ import { errorMessage } from '@/utils/errorMessage';
 import { successMessage } from '@/utils/successMessage';
 import { getUserCred, loginCredentials, resetUserCred } from '@/utils/helper';
 
-const BASE_URL = process.env.HOST_API_KEY;
+const BASE_URL = process.env.HOST_API_KEY || "https://api.example.com/";
 
 let isRefreshing = false;
 const refreshSubscribers: any = [];
+
+// Configure axios defaults
+axios.defaults.timeout = 30000; // 30 second timeout
+axios.defaults.maxRedirects = 5;
 
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
     const originalRequest = error?.config;
-    // const errorCheckMessageForRedirection = error?.response?.data?.response?.message;
 
     if (getUserCred('userCred')) {
       if (status === 403) {
         resetUserCred();
-        if (window && window.location) {
-          resetUserCred();
+        if (typeof window !== 'undefined') {
           window.location.pathname = '/login';
         }
       }
 
-      if (
-        status === 404
-        // && errorCheckMessageForRedirection === 'Invalid id provided.'
-      ) {
+      if (status === 404) {
         isRefreshing = true;
-        if (window && window.location) {
+        if (typeof window !== 'undefined') {
           window.location.pathname = '/404';
         }
       }
@@ -55,8 +54,12 @@ axios.interceptors.response.use(
               loginCredentials('warehouseIds', valueToRefresh);
               onRefreshes(res?.data?.response?.token);
             })
-            .catch((e) => {
-              //
+            .catch(() => {
+              isRefreshing = false;
+              resetUserCred();
+              if (typeof window !== 'undefined') {
+                window.location.pathname = '/login';
+              }
             });
         } else if (
           status === 401 &&
@@ -69,7 +72,7 @@ axios.interceptors.response.use(
               errorMessage("You've been logged out due to inactivity, please login again.");
             showMessage = true;
           }
-          if (window && window.location) {
+          if (typeof window !== 'undefined') {
             resetUserCred();
             window.location.pathname = '/login';
             showMessage = false;
@@ -95,14 +98,12 @@ function subscribeTokenRefresh(cb: any) {
 
 function onRefreshes(token: any) {
   refreshSubscribers.map((cb: any) => cb(token));
+  refreshSubscribers.length = 0;
 }
 
 const customApiHandler =
   (): any =>
   async ({ url, method, body, params, needError, successCode }: any) => {
-    console.log("URL :", url)
-    console.log(`${BASE_URL}${url}`)
-    console.log("Body :", body)
     try {
       axios.interceptors.request.use(
         (config: any) => {
@@ -113,23 +114,47 @@ const customApiHandler =
           return config;
         },
         (error: any) => {
-          console.log("custom handler  Error :", error)
-          Promise.reject(error);
+          return Promise.reject(error);
         }
       );
 
-      const result = await axios({ url: BASE_URL + url, method, data: body, params });
+      const result = await axios({ 
+        url: BASE_URL + url, 
+        method, 
+        data: body, 
+        params,
+        // Add retry logic for network errors
+        retry: 3,
+        retryDelay: 1000
+      });
+      
       successCode && result?.data?.statusCode === 200 && successMessage(successCode);
 
       return { data: result.data };
     } catch (error: any) {
-      console.log("Error :", error)
+      console.error("API Error:", error?.message || "Unknown error");
+      
+      // Check if it's a network error and retry
+      if (error?.message === 'Network Error' && error.config && error.config.retry) {
+        const retryCount = error.config.retry;
+        if (retryCount > 0) {
+          error.config.retry -= 1;
+          return new Promise(resolve => {
+            setTimeout(() => {
+              resolve(axios(error.config));
+            }, error.config.retryDelay || 1000);
+          });
+        }
+      }
+      
       if (needError) {
         error?.response?.data?.response?.validationFailed
           ? errorMessage(error?.response?.data?.response?.validationErrors?.[0]?.value)
-          : errorMessage(error?.response?.data?.response?.message);
+          : errorMessage(error?.response?.data?.response?.message || "An error occurred");
       }
-      return { data: error?.response?.data };
+      
+      return { data: error?.response?.data || { error: true, message: error?.message } };
     }
   };
+
 export default customApiHandler;

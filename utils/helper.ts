@@ -2,17 +2,25 @@ import { AWI_USERS } from '@/constants/common';
 import { EMAIL_REGEX } from '@/constants/regex';
 import { isNull, isString, isUndefined, isEmpty } from 'lodash';
 
-export const loginCredentials = (key: string, value: any) =>
-  localStorage.setItem(key, JSON.stringify(value));
+export const loginCredentials = (key: string, value: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+};
 
 export const getUserCred = (key: string) => {
   if (typeof window !== 'undefined') {
     const storedUserCredStr: any = window.localStorage.getItem(key);
     if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      return JSON.parse(storedUserCredStr);
+      try {
+        return JSON.parse(storedUserCredStr);
+      } catch (error) {
+        console.error('Error parsing user credentials:', error);
+        return null;
+      }
     }
   }
-  return resetUserCred();
+  return null;
 };
 
 export const resetUserCred = () => {
@@ -22,13 +30,19 @@ export const resetUserCred = () => {
     window.localStorage.removeItem('orderListFilter');
     window.localStorage.removeItem('orderCurrentTab');
   }
+  return null;
 };
+
 export const checkIfValidEmail = (value: string) => new RegExp(EMAIL_REGEX).test(value);
-export const checkIfAccess = (accessKey: String) =>
-  getUserCred('userCred')?.roleClaims?.includes(accessKey);
+
+export const checkIfAccess = (accessKey: String) => {
+  if (!accessKey) return false;
+  const userCred = getUserCred('userCred');
+  return userCred?.roleClaims?.includes(accessKey);
+};
 
 export const downloadFileFromURL = (url: string) => {
-  if (url && document && document.createElement) {
+  if (url && typeof document !== 'undefined' && document.createElement) {
     const link = document.createElement('a');
     link.href = url;
     link.download = new URL(url)?.pathname; // Set the desired file name
@@ -38,17 +52,25 @@ export const downloadFileFromURL = (url: string) => {
   }
 };
 
-export const checkIfAWIUser: any = () => AWI_USERS?.includes(getUserCred('userCred')?.role);
-export const checkIfCustomerUser: any = () =>
-  ['Customer User', 'Customer Admin']?.includes(getUserCred('userCred')?.role);
+export const checkIfAWIUser: any = () => {
+  const userCred = getUserCred('userCred');
+  return AWI_USERS?.includes(userCred?.role);
+};
+
+export const checkIfCustomerUser: any = () => {
+  const userCred = getUserCred('userCred');
+  return ['Customer User', 'Customer Admin']?.includes(userCred?.role);
+};
 
 export const downloadStringAsFile = (fileName: string, data: string) => {
-  const bData = new Blob([data], { type: 'text/plain' });
-  const fileURL = window.URL.createObjectURL(bData);
-  const tempLink = document.createElement('a');
-  tempLink.href = fileURL;
-  tempLink.setAttribute('download', fileName);
-  tempLink.click();
+  if (typeof window !== 'undefined') {
+    const bData = new Blob([data], { type: 'text/plain' });
+    const fileURL = window.URL.createObjectURL(bData);
+    const tempLink = document.createElement('a');
+    tempLink.href = fileURL;
+    tempLink.setAttribute('download', fileName);
+    tempLink.click();
+  }
 };
 
 export const formatNumber = (n: number) => {
@@ -56,7 +78,12 @@ export const formatNumber = (n: number) => {
 };
 
 // function to get local time zone from users system
-export const getTimeZoneName = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const getTimeZoneName = () => {
+  if (typeof Intl !== 'undefined') {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  return '';
+};
 
 export const truncateText = (text: string | undefined, length: number) =>
   text && text?.length > length ? `${text.substring(0, length)}...` : text;
@@ -78,33 +105,48 @@ export const isAdminRole = () => {
   if (typeof window !== 'undefined') {
     const storedUserCredStr: any = window.localStorage.getItem(USER_STORAGE_KEY);
     if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      const storage = JSON.parse(storedUserCredStr)?.role;
-      return ADMIN_ROLES.includes(storage);
+      try {
+        const storage = JSON.parse(storedUserCredStr)?.role;
+        return ADMIN_ROLES.includes(storage);
+      } catch (error) {
+        console.error('Error parsing user credentials:', error);
+        return false;
+      }
     }
   }
-  return resetUserCred();
+  return false;
 };
 
 export const isCustomerRole = () => {
   if (typeof window !== 'undefined') {
     const storedUserCredStr: any = window.localStorage.getItem(USER_STORAGE_KEY);
     if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      const storage = JSON.parse(storedUserCredStr)?.role;
-      return CUSTOMER_ROLES.includes(storage);
+      try {
+        const storage = JSON.parse(storedUserCredStr)?.role;
+        return CUSTOMER_ROLES.includes(storage);
+      } catch (error) {
+        console.error('Error parsing user credentials:', error);
+        return false;
+      }
     }
   }
-  return resetUserCred();
+  return false;
 };
 
 export const isManagers = () => {
   if (typeof window !== 'undefined') {
     const storedUserCredStr: any = window.localStorage.getItem(USER_STORAGE_KEY);
     if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      const storage = JSON.parse(storedUserCredStr)?.role;
-      return MANAGER_ROLES.includes(storage);
+      try {
+        const storage = JSON.parse(storedUserCredStr)?.role;
+        return MANAGER_ROLES.includes(storage);
+      } catch (error) {
+        console.error('Error parsing user credentials:', error);
+        return false;
+      }
     }
   }
-  return resetUserCred();
+  return false;
 };
 
 export const isValue = (value: any) => {
@@ -115,11 +157,16 @@ export const wareHouseUserIds = () => {
   if (typeof window !== 'undefined') {
     const storedWarehouseDetails = window.localStorage.getItem('warehouseIds');
     if (storedWarehouseDetails) {
-      const storage = JSON.parse(storedWarehouseDetails)?.warehouseIds;
-      return storage;
+      try {
+        const storage = JSON.parse(storedWarehouseDetails)?.warehouseIds;
+        return storage;
+      } catch (error) {
+        console.error('Error parsing warehouse IDs:', error);
+        return null;
+      }
     }
   }
-  return resetUserCred();
+  return null;
 };
 
 // get user ID
@@ -127,16 +174,24 @@ export const getUserId = () => {
   if (typeof window !== 'undefined') {
     const storedUserCredStr: any = window.localStorage.getItem(USER_STORAGE_KEY);
     if (!isEmpty(storedUserCredStr) && storedUserCredStr !== 'undefined') {
-      const storage = JSON.parse(storedUserCredStr)?.id;
-      return storage;
+      try {
+        const storage = JSON.parse(storedUserCredStr)?.id;
+        return storage;
+      } catch (error) {
+        console.error('Error parsing user credentials:', error);
+        return null;
+      }
     }
   }
-  return resetUserCred();
+  return null;
 };
 
 export const orderPageFilterSaved = (key: any, value: any) => {
-  return localStorage.setItem(key, JSON.stringify(value));
+  if (typeof window !== 'undefined') {
+    return localStorage.setItem(key, JSON.stringify(value));
+  }
 };
+
 export function getUniqueIds(array: any) {
   const seenIds = new Set();
   seenIds.add('');
@@ -184,5 +239,7 @@ export const handleDecValidation = (e: React.ChangeEvent<HTMLInputElement>, rowV
 };
 
 export const orderCurrentTabSaved = (key: any, value: any) => {
-  return localStorage.setItem(key, value);
+  if (typeof window !== 'undefined') {
+    return localStorage.setItem(key, value);
+  }
 };
