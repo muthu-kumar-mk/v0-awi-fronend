@@ -85,7 +85,7 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
       </CardHeader>
       <CardContent className="flex flex-col h-[calc(100%-60px)]">
         <div className="flex-1 flex">
-          <div className="w-1/2 relative">
+          <div className="w-3/4 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -123,7 +123,7 @@ export function TaskStatusSummaryChart({ className }: TaskStatusSummaryProps) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="w-1/2 flex items-center">
+          <div className="w-1/4 flex items-center">
             {renderLegend()}
           </div>
         </div>
