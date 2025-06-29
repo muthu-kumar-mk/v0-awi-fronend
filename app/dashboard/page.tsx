@@ -7,6 +7,7 @@ import { OrderStatusSection } from "@/features/dashboard/components/order-status
 import { CurrentTasksTable } from "@/features/dashboard/components/current-tasks-table"
 import { NeedsAttentionTable } from "@/features/dashboard/components/needs-attention-table"
 import { ChartPlaceholder } from "@/features/dashboard/components/chart-placeholder"
+import { TaskStatusSummaryChart } from "@/features/dashboard/components/task-status-summary-chart"
 import {
   Select,
   SelectContent,
@@ -67,15 +68,13 @@ export default function DashboardPage() {
           <OrderStatusSection />
 
           {/* Chart Containers */}
-          <div className="h-chart-container flex gap-chart-gap">
+          <div className="flex gap-chart-gap">
             <ChartPlaceholder
               title="Task Status"
               description="Horizontal bar chart showing task progress"
-              className="w-chart-container flex-1"
+              className="w-chart-container flex-1 "
             />
-            <ChartPlaceholder
-              title="Task Status Summary"
-              description="Donut chart with task distribution"
+            <TaskStatusSummaryChart
               className="w-chart-container flex-1"
             />
           </div>

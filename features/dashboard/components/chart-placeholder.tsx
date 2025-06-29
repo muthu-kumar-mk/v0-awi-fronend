@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TaskStatusChart } from "./task-status-chart"
 
 interface ChartPlaceholderProps {
   title: string
@@ -12,6 +13,10 @@ interface ChartPlaceholderProps {
 
 export function ChartPlaceholder({ title, description, className }: ChartPlaceholderProps) {
   const [activeTab, setActiveTab] = useState("outbound")
+  
+  if (title === "Task Status") {
+    return <TaskStatusChart className={className} />
+  }
   
   return (
     <Card className={className}>
