@@ -90,6 +90,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                 type="number" 
                 ticks={generateCustomTicks()}
                 domain={[0, 'dataMax + 10']}
+                hide={true}
               />
               <YAxis 
                 type="category" 
@@ -101,7 +102,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                   fontSize: 12,
                   width: 100,
                   wordWrap: 'break-word',
-                  textAnchor: 'end'
+                  textAnchor: 'start'
                 }}
               />
               <Tooltip 
