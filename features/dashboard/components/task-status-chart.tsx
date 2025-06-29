@@ -59,11 +59,11 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
             <BarChart
               data={data}
               layout="vertical"
-              margin={{ top: 20, right: 30, left: -25, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
               barGap={2}
-              barSize={8}
+              barSize={12}
             >
-              <CartesianGrid horizontal strokeDasharray="3 3" />
+              <CartesianGrid horizontal strokeDasharray="3 3" vertical={false} />
               <XAxis type="number" />
               <YAxis 
                 type="category" 
@@ -85,7 +85,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                 }}
                 labelFormatter={(label) => `${label}`}
               />
-              <Bar dataKey="waiting" stackId="a" radius={[8, 0, 0, 8]}>
+              <Bar dataKey="waiting" stackId="a" radius={[0, 0, 0, 0]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-waiting-${index}`} fill={colors.waiting} />
                 ))}
@@ -110,7 +110,7 @@ export function TaskStatusChart({ className }: TaskStatusChartProps) {
                   <Cell key={`cell-inProgress-${index}`} fill={colors.inProgress} />
                 ))}
               </Bar>
-              <Bar dataKey="completed" stackId="a" radius={[0, 8, 8, 0]}>
+              <Bar dataKey="completed" stackId="a" radius={[0, 4, 4, 0]}>
                 {data.map((_, index) => (
                   <Cell key={`cell-completed-${index}`} fill={colors.completed} />
                 ))}
