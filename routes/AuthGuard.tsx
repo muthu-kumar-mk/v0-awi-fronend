@@ -1,10 +1,8 @@
-import { useRouter } from 'next/router';
+"use client"
+
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-// component
-// import Login from 'pages/auth/login';
 import { checkIfAccess, getUserCred } from '@/utils/helper';
-// import LoadingScreen from '@/components/loading-screen';
-// import Page403 from '../pages/403';
 
 // ----------------------------------------------------------------------
 
@@ -13,44 +11,45 @@ type AuthGuardProps = {
 };
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { pathname, push } = useRouter();
-
-  const getUserData = getUserCred('userCred');
-  const isAuthenticated = !!getUserData?.token;
+  const router = useRouter();
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [requestedLocation, setRequestedLocation] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Check authentication status
+    const getUserData = getUserCred('userCred');
+    const authenticated = !!getUserData?.token;
+    setIsAuthenticated(authenticated);
+    
+    // Initialize after a short delay
     setTimeout(() => {
       setIsInitialized(true);
-    }, 1300);
-  }, []);
-
-  useEffect(() => {
-    if (requestedLocation && pathname !== requestedLocation) {
-      push(requestedLocation);
+    }, 500);
+    
+    // Redirect if not authenticated
+    if (!authenticated) {
+      router.push('/login');
     }
-    if (isAuthenticated) {
-      setRequestedLocation(null);
-    }
-  }, [isAuthenticated, pathname, push, requestedLocation]);
+  }, [router]);
 
+  // Show nothing while initializing
   if (!isInitialized) {
-    return <></>;
+    return null;
   }
 
+  // If not authenticated, we've already redirected
   if (!isAuthenticated) {
-    if (pathname !== requestedLocation) {
-      setRequestedLocation(pathname);
-    }
-    push('/login/'); // Navigate to the login page
-    return null;
-  }
-  if (!checkIfAccess(userKey!)) {
-    push('/login'); // Navigate to the 403 page
     return null;
   }
 
+  // Check access permissions if needed
+  const userKey = getUserCred('userCred')?.role;
+  if (!checkIfAccess(userKey)) {
+    router.push('/login');
+    return null;
+  }
+
+  // User is authenticated and has access
   return <>{children}</>;
 }
